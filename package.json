@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "tsc-watch --onSuccess \"node dist/server.js\"",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@types/jsonwebtoken": "^9.0.10",

@@ -1,13 +1,15 @@
 import { Request } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AuthService } from "../service/userService.js";
+import { signToken } from "../utils/token.js";
 import { AppError } from "../errors/AppError.js";
 
 const authService = new AuthService();
 
 export const addUser = asyncHandler(async (req: Request, res) => {
   const user = await authService.addUser(req.body);
-  res.status(201).json({ success: true, data: user });
+  const token = signToken({ id: user.id, role: user.role });
+  res.status(201).json({ success: true, data: user, token });
 });
 
 export const getAllUsers = asyncHandler(async (_req: Request, res) => {
