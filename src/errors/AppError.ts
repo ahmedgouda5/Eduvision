@@ -7,7 +7,7 @@ export class AppError extends Error {
   constructor(
     message: string,
     statusCode = 500,
-    options: { code?: string; details?: unknown; isOperational?: boolean } = {}
+    options: { code?: string; details?: unknown; isOperational?: boolean } = {},
   ) {
     super(message);
     this.name = "AppError";
