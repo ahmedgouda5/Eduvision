@@ -1,0 +1,29 @@
+services:
+  eduvision:
+    depends_on:
+      - db
+    container_name: eduvision
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./src:/app/src
+      - ./dist:/app/dist
+    command: sh -c "npm run db:push && npm run dev"
+
+  db:
+    image: postgres:17-alpine
+    container_name: db
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=eduvision
+      - POSTGRES_PASSWORD=Ahmed@123
+      - POSTGRES_DB=eduvision
+    ports:
+      - "5433:5432"
+
+volumes:
+  postgres-db:
