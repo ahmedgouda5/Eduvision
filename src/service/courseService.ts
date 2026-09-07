@@ -6,7 +6,7 @@ import { courses } from "../db/schema/courses.js";
 const db = drizzle({ client: pool });
 
 export class CourseService {
-  async addCourse(data: { title: string; price: number; admin_id: number }) {
+  async addCourse(data: { title: string; price: number; admin_id: string }) {
     const result = await db.insert(courses).values(data).returning();
     return result[0];
   }
@@ -16,7 +16,7 @@ export class CourseService {
     return result;
   }
 
-  async getCourseById(id: number) {
+  async getCourseById(id: string) {
     const result = await db
       .select()
       .from(courses)
@@ -25,8 +25,8 @@ export class CourseService {
   }
 
   async updateCourse(
-    id: number,
-    admin_id: number,
+    id: string,
+    admin_id: string,
     data: Partial<{ title: string; price: number }>
   ) {
     const result = await db
@@ -37,7 +37,7 @@ export class CourseService {
     return result[0];
   }
 
-  async deleteCourse(id: number, admin_id: number) {
+  async deleteCourse(id: string, admin_id: string) {
     const result = await db
       .delete(courses)
       .where(and(eq(courses.id, id), eq(courses.admin_id, admin_id)))

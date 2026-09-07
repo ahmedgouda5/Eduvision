@@ -18,7 +18,7 @@ export const getAllUsers = asyncHandler(async (_req: Request, res) => {
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res) => {
-  const id = Number(req.params.id);
+  const id = req.params.id as string;
   const user = await authService.deleteUser(id);
   if (!user) {
     throw new AppError("User not found", 404);
@@ -27,7 +27,7 @@ export const deleteUser = asyncHandler(async (req: Request, res) => {
 });
 
 export const updateUser = asyncHandler(async (req: Request, res) => {
-  const id = Number(req.params.id);
+  const id = req.params.id as string;
   const user = await authService.updateUser(id, req.body);
   if (!user) {
     throw new AppError("User not found", 404);

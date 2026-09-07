@@ -5,7 +5,7 @@ import { AppError } from "../errors/AppError.js";
 const SECRET = process.env.JWT_SECRET || "eduvision-secret";
 
 interface JwtPayload {
-  id: number;
+  id: string;
   role: "admin" | "student";
 }
 

@@ -21,13 +21,13 @@ export class AuthService {
     return result;
   }
 
-  async deleteUser(id: number) {
+  async deleteUser(id: string) {
     const result = await db.delete(users).where(eq(users.id, id)).returning();
     return result[0];
   }
 
   async updateUser(
-    id: number,
+    id: string,
     data: Partial<{
       name: string;
       email: string;

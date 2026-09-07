@@ -21,7 +21,7 @@ export const getAllCourses = asyncHandler(async (_req: Request, res) => {
 });
 
 export const getCourseById = asyncHandler(async (req: Request, res) => {
-  const id = Number(req.params.id);
+  const id = req.params.id as string;
   const course = await courseService.getCourseById(id);
   if (!course) {
     throw new AppError("Course not found", 404);
@@ -31,7 +31,7 @@ export const getCourseById = asyncHandler(async (req: Request, res) => {
 
 export const updateCourse = asyncHandler(
   async (req: AuthenticatedRequest, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id as string;
     const { title, price } = req.body;
     const course = await courseService.updateCourse(id, req.user!.id, {
       title,
@@ -46,7 +46,7 @@ export const updateCourse = asyncHandler(
 
 export const deleteCourse = asyncHandler(
   async (req: AuthenticatedRequest, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id as string;
     const course = await courseService.deleteCourse(id, req.user!.id);
     if (!course) {
       throw new AppError("Course not found", 404);
