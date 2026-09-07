@@ -6,7 +6,6 @@ export const options = pgTable("options", {
   id: uuid("id").defaultRandom().primaryKey(),
   question_id: uuid("question_id")
     .notNull()
-    .unique()
     .references(() => questions.id),
   option_text: varchar("option_text", { length: 500 }).notNull(),
   is_correct: boolean("is_correct").notNull().default(false),

@@ -12,9 +12,10 @@ export const questions = pgTable("questions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const questionsRelations = relations(questions, ({ one }) => ({
+export const questionsRelations = relations(questions, ({ one, many }) => ({
   quiz: one(quizzes, {
     fields: [questions.quiz_id],
     references: [quizzes.id],
   }),
+  options: many(options),
 }));
