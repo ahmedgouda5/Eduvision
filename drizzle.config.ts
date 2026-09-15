@@ -5,8 +5,8 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    host: "db",
-    port: 5432,
+    host: process.env.DB_HOST || "db-eduvision",
+    port: Number(process.env.DB_PORT) || 5432,
     user: "eduvision",
     password: "Ahmed@123",
     database: "eduvision",

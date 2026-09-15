@@ -38,18 +38,17 @@ export class OptionsService {
       .select()
       .from(options)
       .where(
-        and(eq(options.question_id, question_id), eq(options.is_correct, true))
+        and(eq(options.question_id, question_id), eq(options.is_correct, true)),
       );
     const correct = correctOption[0];
-    const isCorrect =
-      correct !== undefined && correct.id === option_id;
+    const isCorrect = correct ? correct.id === option_id : false;
     return { isCorrect, correctOptionId: correct?.id ?? null };
   }
 
   async updateOption(
     id: string,
     question_id: string,
-    data: Partial<{ option_text: string; is_correct: boolean }>
+    data: Partial<{ option_text: string; is_correct: boolean }>,
   ) {
     const result = await db
       .update(options)

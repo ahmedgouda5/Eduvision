@@ -9,15 +9,6 @@ interface PgError {
   [key: string]: unknown;
 }
 
-function isPgError(error: unknown): error is PgError {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    typeof (error as PgError).code === "string"
-  );
-}
-
 const PG_ERROR_MAP: Record<string, { status: number; message: string }> = {
   "23505": { status: 409, message: "Email already exists" },
   "23503": { status: 409, message: "Related record does not exist" },
@@ -25,15 +16,35 @@ const PG_ERROR_MAP: Record<string, { status: number; message: string }> = {
   "22P02": { status: 400, message: "Invalid input value" },
 };
 
+function extractPgError(error: unknown): PgError | null {
+  if (typeof error === "object" && error !== null) {
+    if ("code" in error && typeof (error as PgError).code === "string") {
+      return error as PgError;
+    }
+    if (
+      "cause" in error &&
+      typeof (error as { cause?: unknown }).cause === "object" &&
+      (error as { cause?: unknown }).cause !== null
+    ) {
+      const cause = (error as { cause: PgError }).cause;
+      if ("code" in cause && typeof cause.code === "string") {
+        return cause;
+      }
+    }
+  }
+  return null;
+}
+
 function toAppError(error: unknown): AppError {
   if (error instanceof AppError) {
     return error;
   }
 
-  if (isPgError(error) && error.code && error.code in PG_ERROR_MAP) {
-    const mapped = PG_ERROR_MAP[error.code];
+  const pgErr = extractPgError(error);
+  if (pgErr && pgErr.code && pgErr.code in PG_ERROR_MAP) {
+    const mapped = PG_ERROR_MAP[pgErr.code];
     return new AppError(mapped.message, mapped.status, {
-      code: error.code,
+      code: pgErr.code,
       isOperational: true,
     });
   }
@@ -54,7 +65,8 @@ export function errorHandler(
   if (!appError.isOperational || appError.statusCode >= 500) {
     const name = err instanceof Error ? err.name : "UnknownError";
     const message = err instanceof Error ? err.message : String(err);
-    const detail = isPgError(err) ? err.message : undefined;
+    const pgErr = extractPgError(err);
+    const detail = pgErr ? pgErr.message : undefined;
     console.error(`[${name}] ${message}`, detail ?? "");
   }
 
