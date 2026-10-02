@@ -1,7 +1,7 @@
 import { Request } from "express";
-import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { QuizzesService } from "../service/quizzesService.js";
-import { AppError } from "../errors/AppError.js";
+import { asyncHandler } from "../../middlewares/asyncHandler.js";
+import { QuizzesService } from "./quiz.service.js";
+import { AppError } from "../../errors/AppError.js";
 
 const quizzesService = new QuizzesService();
 

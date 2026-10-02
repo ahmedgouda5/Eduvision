@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, authorize } from "../middlewares/auth.js";
+import { authenticate, authorize } from "../../middlewares/auth.js";
 import {
   addLesson,
   getAllLessons,
@@ -7,7 +7,7 @@ import {
   getLessonById,
   updateLesson,
   deleteLesson,
-} from "../controller/lessonsController.js";
+} from "./lesson.controller.js";
 
 const router = Router();
 

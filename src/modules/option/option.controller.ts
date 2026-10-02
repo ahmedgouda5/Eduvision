@@ -1,7 +1,7 @@
 import { Request } from "express";
-import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { OptionsService } from "../service/optionsService.js";
-import { AppError } from "../errors/AppError.js";
+import { asyncHandler } from "../../middlewares/asyncHandler.js";
+import { OptionsService } from "./option.service.js";
+import { AppError } from "../../errors/AppError.js";
 
 const optionsService = new OptionsService();
 

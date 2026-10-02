@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
-import { pool } from "../config/config.js";
+import { pool } from "../../config/config.js";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { lessons } from "../db/schema/lessons.js";
+import { lessons } from "../../db/schema/lessons.js";
 
 const db = drizzle({ client: pool });
 

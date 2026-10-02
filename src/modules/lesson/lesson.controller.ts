@@ -1,7 +1,7 @@
 import { Request } from "express";
-import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { LessonsService } from "../service/lessonsService.js";
-import { AppError } from "../errors/AppError.js";
+import { asyncHandler } from "../../middlewares/asyncHandler.js";
+import { LessonsService } from "./lesson.service.js";
+import { AppError } from "../../errors/AppError.js";
 
 const lessonsService = new LessonsService();
 

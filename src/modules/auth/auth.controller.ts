@@ -1,15 +1,20 @@
 import { Request } from "express";
-import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { AuthService } from "../service/userService.js";
-import { signToken } from "../utils/token.js";
-import { AppError } from "../errors/AppError.js";
+import { AuthenticatedRequest } from "../../middlewares/auth.js";
+import { asyncHandler } from "../../middlewares/asyncHandler.js";
+import { AuthService } from "./auth.service.js";
+import { signToken } from "../../utils/token.js";
+import { AppError } from "../../errors/AppError.js";
 
 const authService = new AuthService();
 
 export const addUser = asyncHandler(async (req: Request, res) => {
   const user = await authService.addUser(req.body);
   const token = signToken({ id: user.id, role: user.role });
-  res.status(201).json({ success: true, data: user, token });
+  res.status(201).json({
+    success: true,
+    data: { name: user.name, email: user.email },
+    token,
+  });
 });
 
 export const login = asyncHandler(async (req: Request, res) => {
@@ -22,10 +27,12 @@ export const login = asyncHandler(async (req: Request, res) => {
   });
 });
 
-export const getAllUsers = asyncHandler(async (_req: Request, res) => {
-  const users = await authService.getAllUsers();
-  res.status(200).json({ success: true, data: users });
-});
+export const getAllUsers = asyncHandler(
+  async (_req: AuthenticatedRequest, res) => {
+    const users = await authService.getAllUsers();
+    res.status(200).json({ success: true, data: users });
+  },
+);
 
 export const deleteUser = asyncHandler(async (req: Request, res) => {
   const id = req.params.id as string;

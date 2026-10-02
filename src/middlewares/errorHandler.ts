@@ -14,6 +14,7 @@ const PG_ERROR_MAP: Record<string, { status: number; message: string }> = {
   "23503": { status: 409, message: "Related record does not exist" },
   "23502": { status: 400, message: "Missing required field" },
   "22P02": { status: 400, message: "Invalid input value" },
+  "23514": { status: 403, message: "Role does not exist" },
 };
 
 function extractPgError(error: unknown): PgError | null {

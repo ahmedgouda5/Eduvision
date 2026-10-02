@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, authorize } from "../middlewares/auth.js";
+import { authenticate, authorize } from "../../middlewares/auth.js";
 import {
   addQuiz,
   getAllQuizzes,
@@ -7,7 +7,7 @@ import {
   getQuizByLesson,
   updateQuiz,
   deleteQuiz,
-} from "../controller/quizzesController.js";
+} from "./quiz.controller.js";
 
 const router = Router();
 

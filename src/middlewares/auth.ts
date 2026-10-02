@@ -43,7 +43,7 @@ export function authorize(...roles: Array<"admin" | "student">) {
     const user = (req as AuthenticatedRequest).user;
 
     if (!user || !roles.includes(user.role)) {
-      return next(new AppError("Forbidden", 403));
+      return next(new AppError("Unauthorized", 403));
     }
 
     next();

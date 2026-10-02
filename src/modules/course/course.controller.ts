@@ -1,8 +1,8 @@
 import { Request } from "express";
-import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { CourseService } from "../service/courseService.js";
-import { AppError } from "../errors/AppError.js";
-import { AuthenticatedRequest } from "../middlewares/auth.js";
+import { asyncHandler } from "../../middlewares/asyncHandler.js";
+import { CourseService } from "./course.service.js";
+import { AppError } from "../../errors/AppError.js";
+import { AuthenticatedRequest } from "../../middlewares/auth.js";
 
 const courseService = new CourseService();
 

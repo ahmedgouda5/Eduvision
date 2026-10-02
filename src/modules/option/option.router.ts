@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, authorize } from "../middlewares/auth.js";
+import { authenticate, authorize } from "../../middlewares/auth.js";
 import {
   addOption,
   getAllOptions,
@@ -8,7 +8,7 @@ import {
   updateOption,
   deleteOption,
   checkAnswer,
-} from "../controller/optionsController.js";
+} from "./option.controller.js";
 
 const router = Router();
 
