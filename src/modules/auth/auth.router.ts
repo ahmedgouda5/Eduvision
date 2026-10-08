@@ -6,12 +6,14 @@ import {
   getAllUsers,
   deleteUser,
   updateUser,
+  verifyLoginOtp,
 } from "./auth.controller.js";
 
 const router = Router();
 
 router.post("/register", addUser);
 router.post("/login", login);
+router.post("/verify-otp", verifyLoginOtp);
 router.get("/", authenticate, authorize("admin"), getAllUsers);
 router.delete("/:id", authenticate, authorize("admin"), deleteUser);
 router.patch("/:id", authenticate, authorize("student"), updateUser);

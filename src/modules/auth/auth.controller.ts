@@ -18,12 +18,11 @@ export const addUser = asyncHandler(async (req: Request, res) => {
 });
 
 export const login = asyncHandler(async (req: Request, res) => {
-  const user = await authService.login(req.body);
-  const token = signToken({ id: user.id, role: user.role });
+  const result = await authService.login(req.body);
   res.status(200).json({
     success: true,
-    data: { name: user.name, email: user.email },
-    token,
+    data: { userId: result.userId },
+    message: result.message,
   });
 });
 
@@ -50,4 +49,21 @@ export const updateUser = asyncHandler(async (req: Request, res) => {
     throw new AppError("User not found", 404);
   }
   res.status(200).json({ success: true, data: user });
+});
+
+export const verifyLoginOtp = asyncHandler(async (req: Request, res) => {
+  const { userId, otp } = req.body;
+
+  if (!userId || !otp) {
+    throw new AppError("userId and otp are required", 400);
+  }
+
+  const user = await authService.verifyLoginOtp(userId, String(otp));
+  const token = signToken({ id: user.id, role: user.role });
+
+  res.status(200).json({
+    success: true,
+    data: { name: user.name, email: user.email },
+    token,
+  });
 });

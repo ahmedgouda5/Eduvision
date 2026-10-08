@@ -6,20 +6,25 @@ import { AuthenticatedRequest } from "../../middlewares/auth.js";
 
 const courseService = new CourseService();
 
-export const addCourse = asyncHandler(async (req: AuthenticatedRequest, res) => {
-  const course = await courseService.addCourse({
-    title: req.body.title,
-    price: req.body.price,
-    admin_id: req.user!.id,
-  });
-  res.status(201).json({ success: true, data: course });
-});
+// ! CreateCourse
+export const addCourse = asyncHandler(
+  async (req: AuthenticatedRequest, res) => {
+    const course = await courseService.addCourse({
+      title: req.body.title,
+      price: req.body.price,
+      admin_id: req.user!.id,
+    });
+    res.status(201).json({ success: true, data: course });
+  },
+);
 
+// * GET ALl COURSES
 export const getAllCourses = asyncHandler(async (_req: Request, res) => {
   const courses = await courseService.getAllCourses();
   res.status(200).json({ success: true, data: courses });
 });
 
+// * GET Course By Id
 export const getCourseById = asyncHandler(async (req: Request, res) => {
   const id = req.params.id as string;
   const course = await courseService.getCourseById(id);
@@ -29,6 +34,7 @@ export const getCourseById = asyncHandler(async (req: Request, res) => {
   res.status(200).json({ success: true, data: course });
 });
 
+// ! UpdateCourse
 export const updateCourse = asyncHandler(
   async (req: AuthenticatedRequest, res) => {
     const id = req.params.id as string;
@@ -41,9 +47,10 @@ export const updateCourse = asyncHandler(
       throw new AppError("Course not found", 404);
     }
     res.status(200).json({ success: true, data: course });
-  }
+  },
 );
 
+// # DeleteCourse
 export const deleteCourse = asyncHandler(
   async (req: AuthenticatedRequest, res) => {
     const id = req.params.id as string;
@@ -52,5 +59,5 @@ export const deleteCourse = asyncHandler(
       throw new AppError("Course not found", 404);
     }
     res.status(200).json({ success: true, data: course });
-  }
+  },
 );

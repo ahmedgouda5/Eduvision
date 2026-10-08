@@ -1,7 +1,10 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, InferSelectModel } from "drizzle-orm";
 import { pool } from "../../config/config.js";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../../db/schema/index.js";
+import { cacheService } from "./Cash/cache.service.js";
+
+type Course = InferSelectModel<typeof schema.courses>;
 
 const db = drizzle({ client: pool, schema });
 
@@ -12,6 +15,8 @@ export class CourseService {
   }
 
   async getAllCourses() {
+    const cachedCourses = await cacheService.get<Course[]>("allCourses");
+    if (cachedCourses) return cachedCourses;
     const result = await db.query.courses.findMany({
       with: {
         lessons: {
@@ -29,6 +34,7 @@ export class CourseService {
         },
       },
     });
+    await cacheService.set("allCourses", result);
     return result;
   }
 

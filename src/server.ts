@@ -9,8 +9,10 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { AppError } from "./errors/AppError.js";
 import cors from "cors";
 import helmet from "helmet";
+import { apiRequestLimiter } from "./config/RateLimiterconfig.js";
 
 const app = express();
+app.use(apiRequestLimiter);
 
 app.use(helmet());
 app.use(
