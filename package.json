@@ -10,7 +10,8 @@
     "dev": "tsc-watch --onSuccess \"node dist/server.js\"",
     "build": "tsc",
     "start": "node dist/server.js",
-    "db:push": "drizzle-kit push --force"
+    "db:push": "drizzle-kit push --force",
+    "db:seed": "tsc && node dist/db/seed.js"
   },
   "dependencies": {
     "@types/jsonwebtoken": "^9.0.10",

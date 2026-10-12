@@ -5,6 +5,7 @@ import lessonsRouter from "./modules/lesson/lesson.router.js";
 import quizzesRouter from "./modules/quiz/quiz.router.js";
 import questionsRouter from "./modules/question/question.router.js";
 import optionsRouter from "./modules/option/option.router.js";
+import quizAttemptsRouter from "./modules/quiz_attempts/quiz_attempts.router.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { AppError } from "./errors/AppError.js";
 import cors from "cors";
@@ -29,6 +30,7 @@ app.use("/api/lessons", lessonsRouter);
 app.use("/api/quizzes", quizzesRouter);
 app.use("/api/questions", questionsRouter);
 app.use("/api/options", optionsRouter);
+app.use("/api/quiz-attempts", quizAttemptsRouter);
 
 app.use((_req, _res, next) => {
   next(new AppError("Route not found", 404, { isOperational: true }));
