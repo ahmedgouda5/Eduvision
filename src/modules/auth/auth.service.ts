@@ -6,6 +6,7 @@ import { AppError } from "../../errors/AppError.js";
 import { users } from "../../db/schema/users.js";
 import { redis } from "../../config/redis.js";
 import { sendOtpEmail } from "../../utils/email.js";
+import { comparePassword, hashPassword } from "../../utils/hashedPassword.js";
 
 const db = drizzle({ client: pool });
 
@@ -16,7 +17,11 @@ export class AuthService {
     password: string;
     role: "admin" | "student";
   }) {
-    const result = await db.insert(users).values(data).returning();
+    const hashedPassword = await hashPassword(data.password);
+    const result = await db
+      .insert(users)
+      .values({ ...data, password: hashedPassword })
+      .returning();
     return result[0];
   }
 
@@ -27,16 +32,11 @@ export class AuthService {
       .where(eq(users.email, data.email));
     const user = result[0];
 
-    if (!user || user.password !== data.password) {
+    if (!user || !(await comparePassword(data.password, user.password))) {
       throw new AppError("Invalid email or password", 401);
     }
 
-    const otp = randomInt(100000, 1000000).toString();
-    await redis.setEx(`login:otp:${user.id}`, 60 * 5, otp);
-
-    await sendOtpEmail(user.email, otp);
-
-    return { userId: user.id, message: "OTP sent to email" };
+    return user;
   }
 
   async verifyLoginOtp(userId: string, otp: string) {

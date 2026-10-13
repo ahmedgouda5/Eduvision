@@ -1,8 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "../errors/AppError.js";
-
-const SECRET = process.env.JWT_SECRET || "eduvision-secret";
+import { verifyToken } from "../utils/token.js";
 
 interface JwtPayload {
   id: string;
@@ -27,7 +26,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET) as JwtPayload;
+    const decoded = verifyToken(token) as JwtPayload;
     (req as AuthenticatedRequest).user = decoded;
     next();
   } catch (error) {
