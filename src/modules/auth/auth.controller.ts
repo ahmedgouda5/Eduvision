@@ -18,11 +18,12 @@ export const addUser = asyncHandler(async (req: Request, res) => {
 });
 
 export const login = asyncHandler(async (req: Request, res) => {
-  const result = await authService.login(req.body);
+  const user = await authService.login(req.body);
+  const token = signToken({ id: user.id, role: user.role });
   res.status(200).json({
     success: true,
-    data: { userId: result.userId },
-    message: result.message,
+    data: { name: user.name, email: user.email },
+    token,
   });
 });
 
