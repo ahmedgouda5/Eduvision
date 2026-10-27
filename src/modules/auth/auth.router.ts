@@ -6,6 +6,7 @@ import {
   getAllUsers,
   deleteUser,
   updateUser,
+  logout,
 } from "./auth.controller.js";
 
 const router = Router();
@@ -14,6 +15,8 @@ const router = Router();
 router.post("/register", addUser);
 //! @route   POST /api/auth/login
 router.post("/login", login);
+//! @route   POST /api/auth/logout
+router.post("/logout", authenticate, logout);
 //! @route   GET /api/auth
 router.get("/", authenticate, authorize("admin"), getAllUsers);
 //! @route   DELETE /api/auth/:id

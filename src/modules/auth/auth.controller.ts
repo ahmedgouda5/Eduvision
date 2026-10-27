@@ -71,3 +71,11 @@ export const updateUser = asyncHandler(async (req: Request, res) => {
   }
   res.status(200).json({ success: true, data: user });
 });
+
+//! @desc    Logout a user
+//! @route   POST /api/auth/logout
+//! @access  Private
+export const logout = asyncHandler(async (_req: Request, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ success: true, msg: "User logged out successfully" });
+});
