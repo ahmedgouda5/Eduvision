@@ -16,7 +16,7 @@ services:
     volumes:
       - ./src:/app/src
       - ./dist:/app/dist
-    command: sh -c "npm run db:push && npm run dev"
+    command: sh -c "npm run db:push && npm run db:seed && npm run dev"
 
   db-eduvision:
     image: postgres:17-alpine

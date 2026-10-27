@@ -4,7 +4,7 @@ import * as schema from "../db/schema/index.js";
 
 // * Uses the same connection config as the app
 const pool = new Pool({
-  host: process.env.DB_HOST || "db-eduvision",
+  host: process.env.DB_HOST || "localhost",
   port: Number(process.env.DB_PORT) || 5432,
   user: process.env.DB_USER || "eduvision",
   password: process.env.DB_PASSWORD || "Ahmed@123",
@@ -74,93 +74,101 @@ async function seed() {
   // ─── 5. Questions + Options ───────────────────────────────────────────────
   const questionsData = [
     {
-      question_text: "What keyword is used to declare a typed variable in TypeScript?",
+      question_text:
+        "What keyword is used to declare a typed variable in TypeScript?",
       options: [
-        { text: "var",    correct: false },
-        { text: "let",    correct: false },
-        { text: "type",   correct: false },
-        { text: "const",  correct: true  }, // ✅
+        { text: "var", correct: false },
+        { text: "let", correct: false },
+        { text: "type", correct: false },
+        { text: "const", correct: true }, // ✅
       ],
     },
     {
-      question_text: "Which type represents the absence of a value in TypeScript?",
+      question_text:
+        "Which type represents the absence of a value in TypeScript?",
       options: [
-        { text: "null",    correct: false },
-        { text: "void",    correct: true  }, // ✅
-        { text: "never",   correct: false },
+        { text: "null", correct: false },
+        { text: "void", correct: true }, // ✅
+        { text: "never", correct: false },
         { text: "unknown", correct: false },
       ],
     },
     {
       question_text: "How do you define an interface in TypeScript?",
       options: [
-        { text: "type MyInterface = {}",      correct: false },
-        { text: "interface MyInterface {}",    correct: true  }, // ✅
-        { text: "class MyInterface {}",        correct: false },
-        { text: "struct MyInterface {}",       correct: false },
+        { text: "type MyInterface = {}", correct: false },
+        { text: "interface MyInterface {}", correct: true }, // ✅
+        { text: "class MyInterface {}", correct: false },
+        { text: "struct MyInterface {}", correct: false },
       ],
     },
     {
-      question_text: "What does the '?' symbol mean after a property name in a TypeScript interface?",
+      question_text:
+        "What does the '?' symbol mean after a property name in a TypeScript interface?",
       options: [
-        { text: "The property is required",   correct: false },
-        { text: "The property is optional",   correct: true  }, // ✅
-        { text: "The property is readonly",   correct: false },
-        { text: "The property is nullable",   correct: false },
+        { text: "The property is required", correct: false },
+        { text: "The property is optional", correct: true }, // ✅
+        { text: "The property is readonly", correct: false },
+        { text: "The property is nullable", correct: false },
       ],
     },
     {
       question_text: "Which of the following is a valid TypeScript tuple type?",
       options: [
-        { text: "let t: [string, number] = ['hello', 42]", correct: true  }, // ✅
+        { text: "let t: [string, number] = ['hello', 42]", correct: true }, // ✅
         { text: "let t: (string, number) = ['hello', 42]", correct: false },
-        { text: "let t: string[] = ['hello', 42]",         correct: false },
-        { text: "let t: Array<string> = ['hello', 42]",    correct: false },
+        { text: "let t: string[] = ['hello', 42]", correct: false },
+        { text: "let t: Array<string> = ['hello', 42]", correct: false },
       ],
     },
     {
-      question_text: "What is the return type of a function that never returns?",
+      question_text:
+        "What is the return type of a function that never returns?",
       options: [
-        { text: "void",    correct: false },
-        { text: "null",    correct: false },
-        { text: "never",   correct: true  }, // ✅
+        { text: "void", correct: false },
+        { text: "null", correct: false },
+        { text: "never", correct: true }, // ✅
         { text: "undefined", correct: false },
       ],
     },
     {
-      question_text: "Which utility type makes all properties of a type optional?",
+      question_text:
+        "Which utility type makes all properties of a type optional?",
       options: [
-        { text: "Required<T>",  correct: false },
-        { text: "Partial<T>",   correct: true  }, // ✅
-        { text: "Readonly<T>",  correct: false },
-        { text: "Pick<T, K>",   correct: false },
+        { text: "Required<T>", correct: false },
+        { text: "Partial<T>", correct: true }, // ✅
+        { text: "Readonly<T>", correct: false },
+        { text: "Pick<T, K>", correct: false },
       ],
     },
     {
-      question_text: "What is the TypeScript type for a value that can be anything?",
+      question_text:
+        "What is the TypeScript type for a value that can be anything?",
       options: [
-        { text: "object",  correct: false },
-        { text: "any",     correct: true  }, // ✅
+        { text: "object", correct: false },
+        { text: "any", correct: true }, // ✅
         { text: "unknown", correct: false },
-        { text: "never",   correct: false },
+        { text: "never", correct: false },
       ],
     },
     {
-      question_text: "How do you cast a value to a specific type in TypeScript?",
+      question_text:
+        "How do you cast a value to a specific type in TypeScript?",
       options: [
-        { text: "value.cast<Type>()",   correct: false },
-        { text: "(Type) value",         correct: false },
-        { text: "value as Type",        correct: true  }, // ✅
+        { text: "value.cast<Type>()", correct: false },
+        { text: "(Type) value", correct: false },
+        { text: "value as Type", correct: true }, // ✅
         { text: "convert<Type>(value)", correct: false },
       ],
     },
     {
-      question_text: "Which access modifier makes a class member accessible only within the class?",
+      question_text:
+        "Which access modifier makes a class member accessible only within the class?",
       options: [
-        { text: "public",    correct: false },
+        { text: "public", correct: false },
         { text: "protected", correct: false },
-        { text: "private",   correct: true  }, // ✅
-        { text: "internal",  correct: false },
+        { text: "private", correct: true }, // ✅
+        { text: "internal", correct: false },
       ],
     },
   ];

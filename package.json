@@ -10,12 +10,17 @@
     "dev": "tsc-watch --onSuccess \"node dist/server.js\"",
     "build": "tsc",
     "start": "node dist/server.js",
+    "docker:build": "docker-compose up --build -d",
+    "docker:dev": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:showdb": "docker exec -it db-eduvision psql -U eduvision -d eduvision",
     "db:push": "drizzle-kit push --force",
-    "db:seed": "tsc && node dist/db/seed.js"
+    "db:seed": "node dist/db/seed.js"
   },
   "dependencies": {
     "@types/jsonwebtoken": "^9.0.10",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
@@ -28,9 +33,10 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.6.5",
     "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.10",

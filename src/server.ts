@@ -11,6 +11,7 @@ import { AppError } from "./errors/AppError.js";
 import cors from "cors";
 import helmet from "helmet";
 import { apiRequestLimiter } from "./config/RateLimiterconfig.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 app.use(apiRequestLimiter);
@@ -23,6 +24,7 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
 app.use("/api/courses", courseRouter);

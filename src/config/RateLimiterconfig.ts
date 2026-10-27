@@ -1,8 +1,8 @@
 import rateLimit from "express-rate-limit";
 
 export const apiRequestLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 40, // limit each IP to 100 requests per windowMs
+  windowMs: 1 * 60 * 1000,
+  max: 40,
   message: JSON.stringify({
     status: "fail",
     statusCode: 429,

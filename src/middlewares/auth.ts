@@ -12,14 +12,8 @@ export interface AuthenticatedRequest extends Request {
   user?: JwtPayload;
 }
 
-function getBearerToken(req: Request): string | undefined {
-  return req.headers.authorization?.startsWith("Bearer ")
-    ? req.headers.authorization.split(" ")[1]
-    : req.headers.authorization?.split(" ")[1];
-}
-
-export function authenticate(req: Request, res: Response, next: NextFunction) {
-  const token = getBearerToken(req);
+export function authenticate(req: Request, _res: Response, next: NextFunction) {
+  const token = req.cookies?.token;
 
   if (!token) {
     return next(new AppError("No token provided", 401));
@@ -27,12 +21,15 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 
   try {
     const decoded = verifyToken(token) as JwtPayload;
+
     (req as AuthenticatedRequest).user = decoded;
-    next();
+
+    return next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       return next(new AppError("Token expired", 401));
     }
+
     return next(new AppError("Invalid token", 401));
   }
 }
@@ -41,10 +38,14 @@ export function authorize(...roles: Array<"admin" | "student">) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const user = (req as AuthenticatedRequest).user;
 
-    if (!user || !roles.includes(user.role)) {
-      return next(new AppError("Unauthorized", 403));
+    if (!user) {
+      return next(new AppError("Authentication required", 401));
     }
 
-    next();
+    if (!roles.includes(user.role)) {
+      return next(new AppError("Forbidden", 403));
+    }
+
+    return next();
   };
 }
