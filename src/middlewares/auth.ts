@@ -43,7 +43,9 @@ export function authorize(...roles: Array<"admin" | "student">) {
     }
 
     if (!roles.includes(user.role)) {
-      return next(new AppError("Forbidden", 403));
+      return next(
+        new AppError("You are not allowed to access this resource", 403),
+      );
     }
 
     return next();
