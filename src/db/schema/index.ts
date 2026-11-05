@@ -1,4 +1,5 @@
 export * from "./courses.js";
+export * from "./Enrollments.js";
 export * from "./lessons.js";
 export * from "./options.js";
 export * from "./questions.js";
