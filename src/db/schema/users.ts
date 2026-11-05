@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { pgTable, pgEnum, varchar, timestamp, uuid } from "drizzle-orm/pg-core";
 import { courses } from "./courses.js";
+import { enrollments } from "./Enrollments.js";
 
 export const roleEnum = pgEnum("role", ["admin", "student"]);
 
@@ -16,4 +17,5 @@ export const users = pgTable("users", {
 
 export const usersRelations = relations(users, ({ many }) => ({
   courses: many(courses),
+  enrollments: many(enrollments),
 }));

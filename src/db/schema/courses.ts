@@ -10,6 +10,7 @@ import {
 
 import { users } from "./users.js";
 import { lessons } from "./lessons.js";
+import { enrollments } from "./Enrollments.js";
 
 export const courses = pgTable("courses", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -33,4 +34,5 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
     references: [users.id],
   }),
   lessons: many(lessons),
+  enrollments: many(enrollments),
 }));

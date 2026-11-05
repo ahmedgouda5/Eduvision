@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { pgTable, uuid, timestamp, pgEnum, unique } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  timestamp,
+  pgEnum,
+  unique,
+  index,
+} from "drizzle-orm/pg-core";
 
 import { users } from "./users.js";
 import { courses } from "./courses.js";
@@ -27,7 +34,10 @@ export const enrollments = pgTable(
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [unique().on(table.user_id, table.course_id)],
+  (table) => [
+    unique("enrollments_user_course_unique").on(table.user_id, table.course_id),
+    index("enrollments_course_id_idx").on(table.course_id),
+  ],
 );
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
