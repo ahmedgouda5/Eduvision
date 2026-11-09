@@ -1,0 +1,2089 @@
+<!doctype html>
+<html lang="en" data-theme="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduVision Backend — Architecture Field Guide</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+<style>
+:root{--max:1240px;--radius:18px;--font-sans:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;--font-mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace}
+[data-theme="night"]{color-scheme:dark;--bg:#060f15;--bg-2:#081a20;--panel:rgba(12,27,36,.78);--panel-solid:#0c1b24;--node-fill:#0b1a23;--node-head:#102732;--text:#e8f3f2;--muted:#8ca6aa;--faint:#5b767c;--line:rgba(140,185,190,.14);--line-strong:rgba(140,185,190,.28);--mint:#4fe3b0;--cyan:#58c9ec;--amber:#f2c75c;--rose:#ff7f90;--violet:#b09cff;--glow-a:rgba(79,227,176,.12);--glow-b:rgba(88,201,236,.10);--shadow:0 20px 60px rgba(0,0,0,.35);--color-base-100:#060f15;--color-base-200:#0a1820;--color-base-300:#102630;--color-base-content:#e8f3f2;--color-primary:#4fe3b0;--color-primary-content:#032018;--color-secondary:#58c9ec;--color-secondary-content:#031f29;--color-accent:#f2c75c;--color-accent-content:#261b03;--color-neutral:#122833;--color-neutral-content:#d8e9e8;--color-info:#58c9ec;--color-info-content:#031f29;--color-success:#4fe3b0;--color-success-content:#032018;--color-warning:#f2c75c;--color-warning-content:#261b03;--color-error:#ff7f90;--color-error-content:#2d060b;--radius-selector:.6rem;--radius-field:.55rem;--radius-box:1.1rem}
+[data-theme="winter"]{color-scheme:light;--bg:#eef5f3;--bg-2:#f8fbfa;--panel:rgba(255,255,255,.84);--panel-solid:#fff;--node-fill:#fff;--node-head:#e9f3f0;--text:#0c2429;--muted:#4d6b70;--faint:#789093;--line:rgba(13,70,78,.12);--line-strong:rgba(13,70,78,.24);--mint:#087f5b;--cyan:#0a7e9e;--amber:#9a6500;--rose:#bd3550;--violet:#6246b5;--glow-a:rgba(8,127,91,.08);--glow-b:rgba(10,126,158,.08);--shadow:0 18px 50px rgba(14,48,54,.10);--color-base-100:#eef5f3;--color-base-200:#f8fbfa;--color-base-300:#dcebe7;--color-base-content:#0c2429;--color-primary:#087f5b;--color-primary-content:#fff;--color-secondary:#0a7e9e;--color-secondary-content:#fff;--color-accent:#9a6500;--color-accent-content:#fff;--color-neutral:#dcebe7;--color-neutral-content:#0c2429;--color-info:#0a7e9e;--color-info-content:#fff;--color-success:#087f5b;--color-success-content:#fff;--color-warning:#9a6500;--color-warning-content:#fff;--color-error:#bd3550;--color-error-content:#fff;--radius-selector:.6rem;--radius-field:.55rem;--radius-box:1.1rem}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;overflow-x:hidden;font-family:var(--font-sans);line-height:1.6;color:var(--text);background:radial-gradient(1100px 720px at 82% -8%,var(--glow-a),transparent 62%),radial-gradient(900px 620px at -8% 34%,var(--glow-b),transparent 58%),var(--bg)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:56px 56px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.55),transparent 78%);opacity:.5}
+::selection{background:var(--mint);color:#04231a}
+a{color:inherit}
+h1,h2,h3,h4,p{margin-top:0}
+button,input,select{font:inherit}
+.wrap{width:min(100% - 40px,var(--max));margin-inline:auto}
+@media(max-width:640px){.wrap{width:min(100% - 28px,var(--max))}}
+.mono{font-family:var(--font-mono)}
+.muted{color:var(--muted)}
+.faint{color:var(--faint)}
+.topbar{position:sticky;top:0;z-index:60;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(18px)}
+.topbar-inner{display:flex;align-items:center;gap:20px;min-height:68px}
+.brand{display:flex;align-items:center;gap:11px;color:var(--text);text-decoration:none;font-weight:800;letter-spacing:-.03em;white-space:nowrap}
+.brand-mark{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#04231a;background:linear-gradient(145deg,var(--mint),var(--cyan));box-shadow:0 0 26px color-mix(in srgb,var(--mint) 28%,transparent)}
+.brand-mark svg{width:19px;height:19px}
+.brand small{display:block;font:9px/1.2 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:2px}
+.nav{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{text-decoration:none;white-space:nowrap;padding:7px 10px;border-radius:999px;font:11px/1 var(--font-mono);letter-spacing:.02em;color:var(--muted);transition:color .18s,background .18s}
+.nav a:hover,.nav a.is-active{color:var(--text);background:color-mix(in srgb,var(--mint) 11%,transparent)}
+.top-actions{display:flex;align-items:center;gap:10px}
+.live-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font:9px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 0 color-mix(in srgb,var(--mint) 55%,transparent);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--mint) 50%,transparent)}60%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.theme-toggle{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;transition:color .18s,border-color .18s,transform .18s}
+.theme-toggle:hover{color:var(--text);border-color:var(--line-strong);transform:rotate(8deg)}
+.theme-toggle svg{width:16px;height:16px}
+[data-theme="night"] .icon-sun{display:block}
+[data-theme="night"] .icon-moon{display:none}
+[data-theme="winter"] .icon-sun{display:none}
+[data-theme="winter"] .icon-moon{display:block}
+@media(max-width:1080px){.topbar-inner{gap:12px}.live-pill{display:none}}
+@media(max-width:820px){.brand small{display:none}.nav{position:fixed;left:0;right:0;bottom:0;z-index:70;margin:0;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 92%,transparent);border-top:1px solid var(--line);backdrop-filter:blur(16px);gap:4px}.nav a{padding:8px 10px;font-size:10px}body{padding-bottom:58px}.theme-toggle{margin-left:auto}}
+.overview{display:grid;grid-template-columns:minmax(0,1.22fr) minmax(320px,.78fr);gap:clamp(30px,5vw,64px);align-items:center;padding-block:74px 54px}
+.eyebrow{display:flex;align-items:center;gap:10px;font:10px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--mint)}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--mint)}
+.overview h1{font-size:clamp(2.65rem,6.4vw,5.4rem);line-height:.96;letter-spacing:-.06em;margin:18px 0 24px;font-weight:800;text-wrap:balance}
+.grad{background:linear-gradient(112deg,var(--mint),var(--cyan) 52%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:clamp(1rem,1.5vw,1.15rem);color:var(--muted);max-width:61ch;margin-bottom:0}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.btn-mint{display:inline-flex;align-items:center;gap:8px;text-decoration:none;cursor:pointer;border:1px solid transparent;border-radius:10px;padding:11px 16px;background:var(--mint);color:#04231a;font-weight:700;font-size:13px;transition:transform .18s,box-shadow .18s}
+.btn-mint:hover{transform:translateY(-2px);box-shadow:0 10px 30px color-mix(in srgb,var(--mint) 25%,transparent)}
+.btn-quiet{display:inline-flex;align-items:center;gap:8px;text-decoration:none;cursor:pointer;border:1px solid var(--line-strong);border-radius:10px;padding:11px 16px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;transition:color .18s,border-color .18s,background .18s}
+.btn-quiet:hover{color:var(--text);border-color:var(--mint);background:color-mix(in srgb,var(--mint) 7%,transparent)}
+.hero-meta{display:flex;flex-wrap:wrap;gap:9px 18px;margin-top:26px;font:10px/1.4 var(--font-mono);color:var(--faint)}
+.hero-meta span{display:inline-flex;align-items:center;gap:6px}
+.hero-meta span::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--faint)}
+.overview-side{min-width:0}
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.stat-card{position:relative;overflow:hidden;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:var(--shadow)}
+.stat-card::after{content:"";position:absolute;right:-20px;bottom:-26px;width:80px;height:80px;border-radius:50%;background:color-mix(in srgb,var(--accent,var(--mint)) 12%,transparent);filter:blur(4px)}
+.stat-card:nth-child(1){--accent:var(--mint)}.stat-card:nth-child(2){--accent:var(--cyan)}.stat-card:nth-child(3){--accent:var(--amber)}.stat-card:nth-child(4){--accent:var(--violet)}
+.stat-num{position:relative;z-index:1;font-size:clamp(2rem,4vw,2.9rem);font-weight:800;letter-spacing:-.06em;line-height:1;color:var(--text)}
+.stat-num span{color:var(--accent,var(--mint))}
+.stat-label{position:relative;z-index:1;margin-top:10px;font:9px/1.4 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.tech-rail{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.tech-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--panel-solid) 65%,transparent);font:9px/1 var(--font-mono);color:var(--faint)}
+.tech-pill::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--mint)}
+.section{padding-block:64px;scroll-margin-top:88px}
+.section-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.54fr);gap:clamp(20px,4vw,48px);align-items:end;margin-bottom:28px}
+.section-head h2{font-size:clamp(1.85rem,3.4vw,2.85rem);line-height:1.08;letter-spacing:-.045em;margin:12px 0 0;text-wrap:balance}
+.section-note{margin:0;color:var(--muted);font-size:13.5px;max-width:50ch}
+.panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 20px;border-bottom:1px solid var(--line)}
+.panel-kicker{font:9px/1 var(--font-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+.hint{font:10px/1.2 var(--font-mono);color:var(--faint)}
+.map-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(285px,.75fr);gap:16px;align-items:stretch}
+.diagram-panel{display:flex;flex-direction:column;overflow:hidden}
+.diagram-scroll{overflow-x:auto;padding:10px 14px 2px}
+.system-map{display:block;width:100%;min-width:760px;height:auto}
+.map-legend{display:flex;flex-wrap:wrap;gap:14px;padding:11px 20px 15px;border-top:1px solid var(--line);font:9px/1.3 var(--font-mono);color:var(--faint)}
+.legend-item{display:inline-flex;align-items:center;gap:7px}
+.legend-swatch{width:16px;height:3px;border-radius:3px;background:var(--mint)}
+.legend-swatch.dashed{background:repeating-linear-gradient(90deg,var(--amber) 0 4px,transparent 4px 8px)}
+.legend-dot{width:6px;height:6px;border-radius:50%;background:var(--mint)}
+.inspector{padding:20px;display:flex;flex-direction:column}
+.inspector h3{margin:14px 0 8px;font-size:20px;letter-spacing:-.025em;line-height:1.15}
+.inspector p{margin:0 0 12px;color:var(--muted);font-size:13px}
+.inspector-points{margin:0 0 16px;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.inspector-points li{position:relative;padding-left:16px;font-size:12px;color:var(--muted)}
+.inspector-points li::before{content:"";position:absolute;left:0;top:.55em;width:5px;height:5px;border-radius:50%;background:var(--mint)}
+.file-chip{margin-top:auto;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:color-mix(in srgb,var(--panel-solid) 65%,transparent);font:10px/1.6 var(--font-mono);color:var(--faint);overflow-wrap:anywhere}
+.fact-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
+.fact{padding:14px 16px;border:1px solid var(--line);border-radius:13px;background:color-mix(in srgb,var(--panel-solid) 55%,transparent)}
+.fact b{display:block;font-size:18px;letter-spacing:-.03em;color:var(--text)}
+.fact span{display:block;margin-top:4px;font:9px/1.4 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.cluster{fill:none;stroke:var(--line-strong);stroke-width:1.2;stroke-dasharray:7 7}
+.cluster-label{fill:var(--faint);font:9px var(--font-mono);letter-spacing:.16em;text-transform:uppercase}
+.app-boundary{fill:color-mix(in srgb,var(--panel-solid) 55%,transparent);stroke:var(--line-strong);stroke-width:1.2;stroke-dasharray:4 5}
+.app-label{fill:var(--faint);font:9px var(--font-mono);letter-spacing:.16em;text-transform:uppercase}
+.map-node{cursor:pointer;outline:none}
+.map-node .node-body{fill:var(--node-fill);stroke:var(--line-strong);stroke-width:1;transition:stroke .2s,filter .2s}
+.map-node:hover .node-body{stroke:color-mix(in srgb,var(--accent,var(--mint)) 65%,var(--line-strong))}
+.map-node.is-active .node-body{stroke:var(--accent,var(--mint));stroke-width:1.8;filter:url(#node-glow)}
+.map-node:focus-visible .node-body{stroke:var(--mint);stroke-width:2}
+.node-rail{fill:var(--accent,var(--mint));opacity:.9}
+.node-dot{fill:var(--accent,var(--mint))}
+.node-dashed{fill:transparent;stroke-dasharray:5 5}
+.node-title{fill:var(--text);font:700 11px var(--font-mono);letter-spacing:.14em}
+.node-sub{fill:var(--muted);font:10px var(--font-sans)}
+.node-mono{fill:var(--faint);font:9px var(--font-mono)}
+.map-arrow{fill:none;stroke:var(--cyan);stroke-width:1.35;marker-end:url(#map-arrow)}
+.map-arrow.dashed{stroke:var(--amber);stroke-dasharray:5 5;opacity:.75;marker-end:url(#map-arrow-amber)}
+.arrow-label{fill:var(--faint);font:8.5px var(--font-mono);letter-spacing:.08em}
+.filter-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.filter-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font:10px/1 var(--font-mono);cursor:pointer;transition:color .18s,border-color .18s,background .18s}
+.filter-chip span{color:var(--faint);font-size:9px}
+.filter-chip:hover{color:var(--text);border-color:var(--line-strong)}
+.filter-chip.is-active{color:var(--text);border-color:color-mix(in srgb,var(--mint) 45%,var(--line));background:color-mix(in srgb,var(--mint) 9%,transparent)}
+.module-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.module-card{--accent:var(--mint);position:relative;min-width:0;overflow:hidden;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:8px;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:15px;transition:transform .2s,border-color .2s,box-shadow .2s}
+.module-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);opacity:.9}
+.module-card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));box-shadow:0 14px 36px rgba(0,0,0,.16)}
+.module-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.module-card.is-hidden{display:none}
+.module-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.module-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);flex:0 0 auto}
+.module-icon svg{width:17px;height:17px}
+.module-card h3{margin:1px 0 0;font-size:15.5px;line-height:1.2;letter-spacing:-.015em}
+.module-service{font:9.5px/1.3 var(--font-mono);color:var(--faint)}
+.module-card p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.55}
+.module-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid var(--line);font:9.5px/1 var(--font-mono);color:var(--faint)}
+.module-open{display:inline-flex;align-items:center;gap:5px;color:var(--accent)}
+.module-open svg{width:11px;height:11px}
+.accent-mint{--accent:var(--mint)}.accent-cyan{--accent:var(--cyan)}.accent-amber{--accent:var(--amber)}.accent-violet{--accent:var(--violet)}.accent-rose{--accent:var(--rose)}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:999px;border:1px solid transparent;font:9px/1 var(--font-mono);letter-spacing:.04em;white-space:nowrap}
+.tag-live{color:var(--mint);background:color-mix(in srgb,var(--mint) 10%,transparent);border-color:color-mix(in srgb,var(--mint) 24%,transparent)}
+.tag-partial{color:var(--amber);background:color-mix(in srgb,var(--amber) 10%,transparent);border-color:color-mix(in srgb,var(--amber) 24%,transparent)}
+.tag-schema{color:var(--violet);background:color-mix(in srgb,var(--violet) 10%,transparent);border-color:color-mix(in srgb,var(--violet) 24%,transparent)}
+.tag-planned{color:var(--rose);background:color-mix(in srgb,var(--rose) 10%,transparent);border-color:color-mix(in srgb,var(--rose) 24%,transparent)}
+.tag-neutral{color:var(--muted);background:color-mix(in srgb,var(--muted) 8%,transparent);border-color:var(--line)}
+.api-panel{margin-top:20px;overflow:hidden}
+.table-controls{display:flex;flex-wrap:wrap;gap:8px;padding:13px 18px;border-bottom:1px solid var(--line)}
+.search-box{display:flex;align-items:center;gap:8px;flex:1 1 230px;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel-solid)}
+.search-box svg{width:14px;height:14px;color:var(--faint);flex:0 0 auto}
+.search-box input{width:100%;min-width:0;border:0;outline:0;background:none;color:var(--text);font:11px var(--font-mono)}
+.search-box input::placeholder{color:var(--faint)}
+.control{min-width:0;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--panel-solid);color:var(--muted);font:10px var(--font-mono);outline:none}
+.control:focus{border-color:var(--mint)}
+.control option{background:var(--panel-solid);color:var(--text)}
+.endpoint-table-wrap{overflow:auto;max-height:520px}
+.endpoint-table{width:100%;min-width:760px;border-collapse:separate;border-spacing:0;font-size:12px}
+.endpoint-table th{position:sticky;top:0;z-index:2;padding:10px 14px;text-align:left;background:var(--panel-solid);border-bottom:1px solid var(--line);font:9px var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.endpoint-table td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+.endpoint-table tr:hover td{background:color-mix(in srgb,var(--mint) 4%,transparent)}
+.endpoint-table tr:last-child td{border-bottom:0}
+.method{display:inline-flex;justify-content:center;min-width:48px;padding:4px 6px;border-radius:5px;border:1px solid transparent;font:700 9px/1 var(--font-mono);letter-spacing:.04em}
+.method-get{color:var(--mint);background:color-mix(in srgb,var(--mint) 10%,transparent);border-color:color-mix(in srgb,var(--mint) 22%,transparent)}
+.method-post{color:var(--cyan);background:color-mix(in srgb,var(--cyan) 10%,transparent);border-color:color-mix(in srgb,var(--cyan) 22%,transparent)}
+.method-patch{color:var(--amber);background:color-mix(in srgb,var(--amber) 10%,transparent);border-color:color-mix(in srgb,var(--amber) 22%,transparent)}
+.method-delete{color:var(--rose);background:color-mix(in srgb,var(--rose) 10%,transparent);border-color:color-mix(in srgb,var(--rose) 22%,transparent)}
+.path{font:11px/1.5 var(--font-mono);color:var(--text);white-space:nowrap}
+.access{display:inline-flex;padding:3px 6px;border-radius:4px;font:9px/1 var(--font-mono);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.access-auth{color:var(--cyan);border-color:color-mix(in srgb,var(--cyan) 22%,transparent)}
+.access-admin{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 22%,transparent)}
+.access-student{color:var(--violet);border-color:color-mix(in srgb,var(--violet) 22%,transparent)}
+.table-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;border-top:1px solid var(--line);font:9px/1.3 var(--font-mono);color:var(--faint)}
+.empty-note{margin:14px 0;color:var(--faint);font-size:12px}
+.schema-facts{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-bottom:16px}
+.schema-fact{padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--panel-solid) 55%,transparent)}
+.schema-fact b{display:block;font-size:17px;letter-spacing:-.03em;color:var(--text)}
+.schema-fact span{display:block;margin-top:3px;font:8.5px/1.35 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.schema-fact.ghost{border-style:dashed}
+.data-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(285px,.72fr);gap:16px;align-items:stretch}
+.erd-panel{overflow:hidden;display:flex;flex-direction:column}
+.erd-scroll{overflow-x:auto;padding:10px 14px 14px}
+#erd-canvas{display:block;width:100%;min-width:820px;height:auto}
+.erd-scroll-hint{padding:0 20px 12px;font:9px var(--font-mono);color:var(--faint)}
+.erd-entity{cursor:pointer;outline:none}
+.entity-body{fill:var(--node-fill);stroke:var(--line-strong);stroke-width:1;transition:stroke .2s,filter .2s}
+.erd-entity:hover .entity-body{stroke:color-mix(in srgb,var(--mint) 45%,var(--line-strong))}
+.erd-entity.is-active .entity-body{stroke:var(--mint);stroke-width:1.8;filter:url(#erd-glow)}
+.erd-entity:focus-visible .entity-body{stroke:var(--mint);stroke-width:2}
+.entity-accent{fill:var(--mint)}
+.entity-head-line{stroke:var(--line);stroke-width:1}
+.entity-name{fill:var(--text);font:700 12px var(--font-mono);letter-spacing:.01em}
+.entity-kind{fill:var(--faint);font:8px var(--font-mono);letter-spacing:.12em;text-transform:uppercase}
+.entity-row{fill:var(--muted);font:9.5px var(--font-mono)}
+.entity-type{fill:var(--faint);font:8px var(--font-mono)}
+.entity-flag{font:700 7.5px var(--font-mono);letter-spacing:.04em}
+.flag-PK{fill:var(--amber)}.flag-FK{fill:var(--cyan)}.flag-UQ{fill:var(--violet)}.flag-ENUM{fill:var(--mint)}
+.erd-edge path{fill:none;stroke:var(--cyan);stroke-opacity:.34;stroke-width:1.25;transition:stroke-opacity .2s,stroke .2s}
+.erd-edge.is-related path{stroke:var(--mint);stroke-opacity:.95}
+.erd-edge.is-dim path{stroke-opacity:.07}
+.erd-edge text{fill:var(--faint);font:8px var(--font-mono);paint-order:stroke;stroke:var(--panel-solid);stroke-width:3px;stroke-linejoin:round}
+.entity-inspector{padding:20px;display:flex;flex-direction:column}
+.entity-inspector h3{margin:13px 0 5px;font-size:21px;letter-spacing:-.03em}
+.entity-desc{margin:0 0 14px;color:var(--muted);font-size:12px}
+.column-list{display:flex;flex-direction:column;margin-bottom:14px;border-top:1px solid var(--line)}
+.column-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font:10px var(--font-mono)}
+.column-name{color:var(--text);overflow-wrap:anywhere}
+.column-type{color:var(--faint);font-size:9px}
+.column-flag{min-width:24px;text-align:right;font-size:8px;font-weight:700}
+.entity-relations{margin:0 0 8px;color:var(--muted);font-size:11.5px}
+.entity-relations b{color:var(--text);font-weight:600}
+.entity-note{margin:0;color:var(--faint);font-size:11px;border-top:1px solid var(--line);padding-top:10px}
+.auth-panel{overflow:hidden}
+.flow-tabs{display:flex;gap:5px;padding:13px 16px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.flow-tabs::-webkit-scrollbar{display:none}
+.flow-tab{flex:0 0 auto;padding:8px 11px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--muted);font:10px var(--font-mono);cursor:pointer;white-space:nowrap;transition:color .18s,border-color .18s,background .18s}
+.flow-tab:hover{color:var(--text);border-color:var(--line)}
+.flow-tab.is-active{color:var(--text);border-color:color-mix(in srgb,var(--mint) 38%,var(--line));background:color-mix(in srgb,var(--mint) 9%,transparent)}
+.auth-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.8fr)}
+.auth-left{min-width:0;padding:15px;border-right:1px solid var(--line)}
+.sequence-scroll{overflow-x:auto}
+#auth-diagram svg{display:block;width:100%;min-width:720px;height:auto}
+.auth-right{min-width:0;padding:20px}
+.flow-summary h3{margin:10px 0 7px;font-size:20px;letter-spacing:-.03em}
+.flow-summary p{margin:0;color:var(--muted);font-size:12.5px}
+.flow-steps{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.step-btn{display:grid;grid-template-columns:24px minmax(0,1fr);gap:9px;width:100%;padding:8px;text-align:left;border:1px solid transparent;border-radius:8px;background:none;color:var(--muted);font-size:12px;line-height:1.5;cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+.step-btn:hover,.step-btn.is-active{color:var(--text);border-color:var(--line);background:color-mix(in srgb,var(--mint) 7%,transparent)}
+.step-num{color:var(--mint);font:9px/1.7 var(--font-mono)}
+.auth-flags{display:flex;flex-direction:column;gap:7px;margin-top:16px}
+.auth-flag{padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:color-mix(in srgb,var(--panel-solid) 55%,transparent)}
+.auth-flag b{display:block;color:var(--text);font-size:11px}
+.auth-flag span{display:block;margin-top:2px;color:var(--faint);font:9.5px/1.45 var(--font-mono)}
+.auth-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px}
+.auth-fact{padding:15px;border:1px solid var(--line);border-radius:13px;background:color-mix(in srgb,var(--panel-solid) 55%,transparent)}
+.auth-fact b{display:block;font-size:12px;color:var(--text)}
+.auth-fact p{margin:5px 0 0;color:var(--muted);font-size:11.5px}
+.seq-participant rect{fill:var(--node-fill);stroke:var(--line-strong);stroke-width:1}
+.seq-participant text{fill:var(--text);font:700 10px var(--font-mono)}
+.seq-participant .seq-sub{fill:var(--faint);font:8px var(--font-sans)}
+.seq-lifeline{stroke:var(--line);stroke-width:1;stroke-dasharray:3 5}
+.seq-arrow line{stroke:var(--cyan);stroke-width:1.2}
+.seq-arrow text{fill:var(--muted);font:9.5px var(--font-mono)}
+.seq-arrow .seq-sub{fill:var(--faint);font:8px var(--font-mono)}
+.seq-arrow.dashed line{stroke:var(--faint);stroke-dasharray:5 5}
+.seq-arrow.is-hot line{stroke:var(--amber);stroke-width:2}
+.seq-arrow.is-hot text{fill:var(--amber)}
+.lifecycle-panel{padding:20px}
+.lifecycle-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.lifecycle-top h3{margin:9px 0 0;font-size:22px;letter-spacing:-.03em}
+.stage-rail{display:flex;gap:6px;overflow-x:auto;padding:17px 0 14px;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.stage-btn{flex:0 0 auto;min-width:92px;padding:8px 10px;text-align:left;border:1px solid var(--line);border-radius:9px;background:var(--panel-solid);color:var(--muted);font-size:10.5px;cursor:pointer;transition:color .18s,border-color .18s,background .18s}
+.stage-btn .stage-n{display:block;margin-bottom:3px;color:var(--faint);font:8.5px/1 var(--font-mono)}
+.stage-btn:hover{color:var(--text);border-color:var(--line-strong)}
+.stage-btn.is-active{color:var(--text);border-color:var(--mint);background:color-mix(in srgb,var(--mint) 9%,transparent)}
+.stage-detail{display:grid;grid-template-columns:78px minmax(0,1fr);gap:clamp(16px,3vw,30px);padding-top:20px}
+.stage-number{font:800 50px/1 var(--font-mono);letter-spacing:-.07em;color:color-mix(in srgb,var(--mint) 28%,transparent)}
+.stage-copy h3{margin:8px 0 7px;font-size:21px;letter-spacing:-.03em}
+.stage-copy p{margin:0 0 10px;color:var(--muted);font-size:13px;max-width:78ch}
+.stage-file{display:inline-flex;padding:4px 7px;border:1px solid var(--line);border-radius:5px;background:color-mix(in srgb,var(--panel-solid) 62%,transparent);font:9.5px var(--font-mono);color:var(--faint)}
+.stage-points{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.stage-points li{position:relative;padding-left:14px;color:var(--muted);font-size:11.5px}
+.stage-points li::before{content:"";position:absolute;left:0;top:.58em;width:4px;height:4px;border-radius:50%;background:var(--mint)}
+.stage-fail{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
+.mini-code{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--panel-solid) 75%,transparent);overflow-x:auto;color:var(--cyan);font:10.5px/1.7 var(--font-mono)}
+.error-panel{margin-top:15px;padding:18px 20px}
+.error-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.error-chip{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--panel-solid) 55%,transparent);font-size:10.5px;color:var(--muted)}
+.error-chip b{color:var(--text);font:700 10px var(--font-mono)}
+.pg-map{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.pg-map summary{cursor:pointer;color:var(--muted);font:10px var(--font-mono)}
+.pg-map table{width:100%;margin-top:10px;border-collapse:collapse;font:10px var(--font-mono)}
+.pg-map th,.pg-map td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;color:var(--muted)}
+.pg-map th{color:var(--faint);font-weight:400;text-transform:uppercase;letter-spacing:.08em;font-size:8.5px}
+.integration-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.integration-card{padding:18px;display:flex;flex-direction:column;gap:7px}
+.int-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.int-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--mint);background:color-mix(in srgb,var(--mint) 11%,transparent)}
+.int-icon svg{width:17px;height:17px}
+.integration-card h3{margin:2px 0 0;font-size:15px;letter-spacing:-.015em}
+.int-role{margin:0;color:var(--muted);font-size:12px}
+.int-details{display:flex;flex-direction:column;gap:3px;margin:3px 0 0;padding:0;list-style:none}
+.int-details li{color:var(--faint);font:9.5px/1.5 var(--font-mono)}
+.int-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid var(--line);font:9px/1.3 var(--font-mono);color:var(--faint)}
+.int-foot code{overflow-wrap:anywhere}
+.integration-note{margin-top:13px;padding:12px 15px;border:1px dashed var(--line-strong);border-radius:12px;color:var(--faint);font-size:11.5px}
+.integration-note b{color:var(--muted)}
+.gap-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.gap-card{padding:18px;display:flex;flex-direction:column;gap:7px}
+.gap-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.gap-num{color:var(--faint);font:9px var(--font-mono)}
+.gap-card h3{margin:1px 0 0;font-size:15.5px;letter-spacing:-.02em}
+.gap-card p{margin:0;color:var(--muted);font-size:12.5px}
+.gap-evidence{display:flex;flex-wrap:wrap;gap:7px;margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+.gap-evidence code{color:var(--faint);font:9px/1.5 var(--font-mono);overflow-wrap:anywhere}
+.next-box{margin-top:18px;padding:22px;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:24px;align-items:start}
+.next-box h3{margin:9px 0 0;font-size:21px;letter-spacing:-.03em}
+.next-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.next-list li{position:relative;padding-left:18px;color:var(--muted);font-size:12.5px}
+.next-list li::before{content:"?";position:absolute;left:0;top:0;color:var(--mint);font:700 10px var(--font-mono)}
+.site-footer{margin-top:42px;padding-block:32px 40px;border-top:1px solid var(--line);color:var(--faint);font-size:11.5px}
+.footer-grid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.footer-brand{font-weight:700;color:var(--muted);letter-spacing:-.01em}
+.footer-brand span{display:block;margin-top:4px;font:9px/1.4 var(--font-mono);color:var(--faint)}
+.footer-refs{display:flex;flex-wrap:wrap;gap:5px;max-width:660px}
+.footer-refs code{padding:3px 6px;border:1px solid var(--line);border-radius:4px;font:9px/1.4 var(--font-mono);color:var(--faint)}
+.reveal{opacity:1}
+html.js .reveal{opacity:0;transform:translateY(16px);transition:opacity .65s ease,transform .65s ease}
+html.js .reveal.is-visible{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}html.js .reveal{opacity:1;transform:none;transition:none}.pulse-dot{animation:none}}
+@media(max-width:1100px){.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.integration-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.schema-facts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:940px){.overview{grid-template-columns:minmax(0,1fr);padding-block:52px 40px}.overview-side{max-width:620px}.map-layout,.data-layout{grid-template-columns:minmax(0,1fr)}.inspector{min-height:0}.section-head{grid-template-columns:minmax(0,1fr)}.auth-grid{grid-template-columns:minmax(0,1fr)}.auth-left{border-right:0;border-bottom:1px solid var(--line)}.fact-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.section{padding-block:48px}.module-grid,.integration-grid,.gap-grid,.auth-facts{grid-template-columns:minmax(0,1fr)}.error-chips{grid-template-columns:repeat(2,minmax(0,1fr))}.next-box{grid-template-columns:minmax(0,1fr)}.stage-detail{grid-template-columns:minmax(0,1fr)}.stage-number{font-size:34px}.schema-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+dialog.module-dialog{width:min(860px,calc(100vw - 28px));max-width:none;padding:0;border:0;background:transparent;color:var(--text)}
+dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(7px)}
+.dialog-shell{position:relative;max-height:min(86vh,900px);overflow-y:auto;padding:clamp(20px,4vw,30px);border:1px solid var(--line-strong);border-radius:20px;background:var(--panel-solid);box-shadow:var(--shadow)}
+.dialog-close{position:absolute;top:13px;right:13px;width:32px;height:32px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
+.dialog-close:hover{color:var(--text);border-color:var(--line-strong)}
+.dialog-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-right:36px}
+.dialog-shell h3{margin:11px 0 3px;font-size:27px;letter-spacing:-.04em}
+.dialog-service{color:var(--faint);font:10px var(--font-mono)}
+.dialog-summary{margin:12px 0 0;color:var(--muted);font-size:13px;max-width:68ch}
+.dialog-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;margin-top:20px}
+.dialog-grid h4{margin:0 0 7px;color:var(--faint);font:9px var(--font-mono);letter-spacing:.14em;text-transform:uppercase}
+.dialog-points{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.dialog-points li{position:relative;padding-left:15px;color:var(--muted);font-size:12px}
+.dialog-points li::before{content:"";position:absolute;left:0;top:.55em;width:4px;height:4px;border-radius:50%;background:var(--mint)}
+.route-line{display:flex;gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--line);font:10px/1.5 var(--font-mono)}
+.route-line:last-child{border-bottom:0}
+.route-path{color:var(--text);overflow-wrap:anywhere}
+.dialog-note{margin-top:18px;padding:11px 13px;border-left:2px solid var(--amber);border-radius:0 8px 8px 0;background:color-mix(in srgb,var(--amber) 6%,transparent);color:var(--muted);font-size:11.5px}
+.dialog-note b{color:var(--amber);font:9px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:3px}
+.dialog-files{margin-top:10px;color:var(--faint);font:9px/1.6 var(--font-mono);overflow-wrap:anywhere}
+.modal-open{overflow:hidden}
+@media(max-width:640px){.dialog-grid{grid-template-columns:minmax(0,1fr)}.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.table-controls{padding:12px}.endpoint-table th,.endpoint-table td{padding:8px 10px}}
+/* compatibility layer for generated markup */
+.table-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:13px 18px;border-bottom:1px solid var(--line)}
+.search-wrap{display:flex;align-items:center;gap:8px;flex:1 1 240px;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel-solid)}
+.search-wrap svg{width:14px;height:14px;color:var(--faint);flex:0 0 auto}
+.search-wrap input{width:100%;min-width:0;border:0;outline:0;background:none;color:var(--text);font:11px var(--font-mono)}
+.search-wrap input::placeholder{color:var(--faint)}
+.table-toolbar select{min-width:0;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--panel-solid);color:var(--muted);font:10px var(--font-mono);outline:none}
+.table-toolbar select:focus{border-color:var(--mint)}
+.result-count{margin-left:auto;font:9px/1.3 var(--font-mono);color:var(--faint);white-space:nowrap}
+.table-scroll{overflow:auto;max-height:520px}
+.endpoint-table code{font:11px/1.5 var(--font-mono);color:var(--text);white-space:nowrap}
+.table-empty{padding:18px;color:var(--faint);font-size:12px}
+.erd{display:block;width:100%;min-width:820px;height:auto}
+.entity-node{cursor:pointer;outline:none}
+.entity-node .entity-box{fill:var(--node-fill);stroke:var(--line-strong);stroke-width:1;transition:stroke .2s,filter .2s}
+.entity-node:hover .entity-box{stroke:color-mix(in srgb,var(--mint) 50%,var(--line-strong))}
+.entity-node.is-active .entity-box{stroke:var(--mint);stroke-width:1.8;filter:url(#node-glow)}
+.entity-node:focus-visible .entity-box{stroke:var(--mint);stroke-width:2}
+.entity-bar{fill:var(--mint)}
+.entity-meta{fill:var(--faint);font:8px var(--font-mono)}
+.erd-legend{fill:var(--faint);font:8px var(--font-mono)}
+.schema-stats{display:flex;flex-wrap:wrap;gap:12px;padding:12px 20px;border-top:1px solid var(--line);font:9px/1.3 var(--font-mono);color:var(--faint)}
+.schema-stats b{color:var(--muted);font-weight:600}
+.entity-columns{display:flex;flex-direction:column;margin-bottom:13px;border-top:1px solid var(--line)}
+.entity-columns .column-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font:10px var(--font-mono)}
+.auth-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.8fr);gap:16px;align-items:stretch}
+.auth-panel{overflow:hidden;display:flex;flex-direction:column}
+.flow-caption{padding:16px 20px 0}
+.flow-kicker{font:9px/1.3 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mint)}
+.flow-caption h3{margin:8px 0 6px;font-size:20px;letter-spacing:-.03em}
+.flow-caption p{margin:0;color:var(--muted);font-size:12.5px}
+#auth-diagram{display:block;width:100%;min-width:720px;height:auto}
+.auth-facts{display:flex!important;flex-direction:column;padding:20px}
+.token-visual{margin:14px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.token-part{padding:9px 11px;border-bottom:1px solid var(--line);font:10px/1.4 var(--font-mono);color:var(--faint)}
+.token-part:last-child{border-bottom:0}
+.token-part span{display:block;margin-top:2px;color:var(--text);word-break:break-all}
+.token-part.payload{background:color-mix(in srgb,var(--mint) 5%,transparent)}
+.mini-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.mini-list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted)}
+.mini-list b{font:10px var(--font-mono);color:var(--text);font-weight:600}
+.aside-note{margin:14px 0 0;color:var(--faint);font-size:11px;line-height:1.55}
+.lifecycle-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:16px;align-items:stretch}
+.stage-panel{overflow:hidden;padding:0 18px 18px}
+.stage-detail{display:flex!important;flex-direction:column;padding:20px}
+.stage-badge{font:800 44px/1 var(--font-mono);letter-spacing:-.07em;color:color-mix(in srgb,var(--mint) 32%,transparent);margin-bottom:12px}
+.stage-detail h3{margin:0 0 7px;font-size:21px;letter-spacing:-.03em}
+.stage-detail p{margin:0 0 12px;color:var(--muted);font-size:13px}
+.stage-code{margin:4px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--panel-solid) 75%,transparent);overflow-x:auto;color:var(--cyan);font:10.5px/1.7 var(--font-mono)}
+.stage-points{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.stage-points li{position:relative;padding-left:15px;color:var(--muted);font-size:11.5px}
+.stage-points li::before{content:"";position:absolute;left:0;top:.55em;width:4px;height:4px;border-radius:50%;background:var(--mint)}
+.integration-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:7px}
+.integration-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.integration-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--accent,var(--mint));background:color-mix(in srgb,var(--accent,var(--mint)) 11%,transparent);font:700 10px var(--font-mono)}
+.integration-card h3{margin:2px 0 0;font-size:15px;letter-spacing:-.015em}
+.integration-card p{margin:0;color:var(--muted);font-size:12px}
+.integration-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.integration-meta span{padding:3px 6px;border:1px solid var(--line);border-radius:4px;color:var(--faint);font:8.5px/1.3 var(--font-mono)}
+.env-line{display:block;margin-top:auto;padding-top:10px;border-top:1px solid var(--line);color:var(--faint);font:9px/1.5 var(--font-mono);overflow-wrap:anywhere}
+.integration-missing{background:color-mix(in srgb,var(--panel-solid) 45%,transparent)}
+.gap-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:7px}
+.gap-severity{align-self:flex-start;padding:3px 7px;border-radius:4px;font:700 8px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase}
+.severity-high .gap-severity{color:var(--rose);background:color-mix(in srgb,var(--rose) 10%,transparent)}
+.severity-medium .gap-severity{color:var(--amber);background:color-mix(in srgb,var(--amber) 10%,transparent)}
+.severity-low .gap-severity{color:var(--cyan);background:color-mix(in srgb,var(--cyan) 10%,transparent)}
+.gap-card h3{margin:1px 0 0;font-size:15.5px;letter-spacing:-.02em}
+.gap-card p{margin:0;color:var(--muted);font-size:12.5px}
+.evidence{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);color:var(--faint);font:9px/1.5 var(--font-mono);overflow-wrap:anywhere}
+.verdict{margin-top:18px;padding:22px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(135deg,color-mix(in srgb,var(--mint) 7%,transparent),transparent 65%);box-shadow:var(--shadow)}
+.verdict-label{font:9px/1 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mint)}
+.verdict p{margin:9px 0 0;color:var(--muted);font-size:13px;max-width:90ch}
+.footer{margin-top:42px;padding-block:32px 40px;border-top:1px solid var(--line);color:var(--faint);font-size:11.5px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.footer-brand{margin-bottom:8px}
+.footer p{margin:0;max-width:66ch}
+.footer-links{display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start}
+.footer-links a{color:var(--faint);text-decoration:none;font:10px var(--font-mono)}
+.footer-links a:hover{color:var(--mint)}
+.dialog-backdrop{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:14px;background:rgba(1,8,12,.72);backdrop-filter:blur(7px)}
+.dialog-backdrop[hidden]{display:none}
+.dialog-card{position:relative;width:min(860px,100%);max-height:min(88vh,900px);overflow-y:auto;padding:clamp(20px,4vw,30px);border:1px solid var(--line-strong);border-radius:20px;background:var(--panel-solid);box-shadow:var(--shadow)}
+.dialog-glyph{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;color:var(--mint);background:color-mix(in srgb,var(--mint) 10%,transparent);margin-left:auto;flex:0 0 auto}
+.dialog-glyph svg{width:25px;height:25px}
+.dialog-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;margin-top:20px}
+.dialog-label{margin-bottom:8px;color:var(--faint);font:9px var(--font-mono);letter-spacing:.14em;text-transform:uppercase}
+.dialog-routes{display:flex;flex-direction:column}
+.dialog-routes .route-line{display:flex;gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--line);font:10px/1.5 var(--font-mono)}
+.dialog-routes .route-path{color:var(--text);overflow-wrap:anywhere}
+.dialog-head{display:flex;align-items:flex-start;gap:12px;padding-right:36px}
+.dialog-head h2{margin:9px 0 3px;font-size:27px;letter-spacing:-.04em;line-height:1.1}
+@media(max-width:940px){.auth-layout,.lifecycle-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:720px){.dialog-columns{grid-template-columns:minmax(0,1fr)}.result-count{margin-left:0}.table-toolbar select{flex:1 1 120px}}
+.lifecycle-layout{align-items:start}
+.stage-rail{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible}
+@media(max-width:720px){.stage-rail{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner wrap">
+    <a class="brand" href="#top" aria-label="EduVision architecture home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6l7-3z"/><path d="M9.5 10.5l1.8 1.8 3.4-3.4"/></svg>
+      </span>
+      <span>EduVision<small>backend field guide</small></span>
+    </a>
+    <nav class="nav" aria-label="Architecture sections">
+      <a href="#map">Map</a>
+      <a href="#modules">Modules</a>
+      <a href="#data">Data</a>
+      <a href="#auth">Auth</a>
+      <a href="#lifecycle">Lifecycle</a>
+      <a href="#integrations">Integrations</a>
+      <a href="#gaps">Gaps</a>
+    </nav>
+    <div class="top-actions">
+      <span class="live-pill"><span class="pulse-dot"></span>39 live routes</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 7 7 0 0 0 20 14.5z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="overview wrap">
+    <div class="reveal">
+      <div class="eyebrow">EduVision · backend field guide</div>
+      <h1>Inside the<br><span class="grad">EduVision</span> API</h1>
+      <p class="lede">A code-derived map of the Express 5 service that sells and delivers video courses: routers, service classes, PostgreSQL tables, cookie authentication, and every hop of a request. README-only targets are labeled as such.</p>
+      <div class="hero-actions">
+        <a class="btn-mint" href="#map">Open the system map
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn-quiet" href="#gaps">See the reality check</a>
+      </div>
+      <div class="hero-meta">
+        <span>Analyzed 09 Nov 2026</span>
+        <span>src/ · commit a097702</span>
+        <span>No source files modified</span>
+      </div>
+    </div>
+    <div class="overview-side reveal">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num">39<span>.</span></div><div class="stat-label">live endpoints</div></div>
+        <div class="stat-card"><div class="stat-num">9<span>.</span></div><div class="stat-label">tables in Drizzle</div></div>
+        <div class="stat-card"><div class="stat-num">7<span>.</span></div><div class="stat-label">mounted routers</div></div>
+        <div class="stat-card"><div class="stat-num">8<span>.</span></div><div class="stat-label">service classes</div></div>
+      </div>
+      <div class="tech-rail" aria-label="Technology stack">
+        <span class="tech-pill">Express 5.2</span>
+        <span class="tech-pill">TypeScript 5.9</span>
+        <span class="tech-pill">Drizzle 0.45</span>
+        <span class="tech-pill">PostgreSQL 17</span>
+        <span class="tech-pill">Redis 7</span>
+        <span class="tech-pill">JWT HS256</span>
+        <span class="tech-pill">bcrypt 12</span>
+        <span class="tech-pill">Docker Compose</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="map">
+    <header class="section-head reveal">
+      <div>
+        <div class="eyebrow">01 · System architecture</div>
+        <h2>One Express process, two backing services</h2>
+      </div>
+      <p class="section-note">Traffic enters a single API container, crosses a fixed middleware chain, fans out through seven routers, and reaches PostgreSQL through Drizzle. Redis is only used to cache the course catalog.</p>
+    </header>
+    <div class="map-layout reveal">
+      <div class="panel diagram-panel">
+        <div class="panel-head">
+          <span class="panel-kicker">Live topology</span>
+          <span class="hint">Click any node to inspect it</span>
+        </div>
+        <div class="diagram-scroll">
+          <svg class="system-map" viewBox="0 0 1200 700" role="img" aria-label="EduVision system architecture: client, Express middleware, routers, controllers, services, Drizzle, PostgreSQL, Redis, and Nodemailer">
+            <defs>
+              <marker id="map-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+                <path d="M0 0 L9 4.5 L0 9 Z" fill="var(--cyan)"></path>
+              </marker>
+              <marker id="map-arrow-amber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+                <path d="M0 0 L9 4.5 L0 9 Z" fill="var(--amber)"></path>
+              </marker>
+              <filter id="node-glow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="5" result="blur"></feGaussianBlur>
+                <feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+              </filter>
+            </defs>
+
+            <rect class="cluster" x="250" y="64" width="930" height="516" rx="24"></rect>
+            <text class="cluster-label" x="272" y="88">Docker Compose network</text>
+
+            <rect class="app-boundary" x="275" y="100" width="560" height="450" rx="18"></rect>
+            <text class="app-label" x="298" y="124">Express 5 · app container · :4000</text>
+
+            <g class="map-node" data-layer="client" tabindex="0" role="button" aria-label="Inspect client layer" style="--accent: var(--mint)">
+              <title>Client — HTTP consumer holding the token cookie</title>
+              <rect class="node-body" x="40" y="180" width="185" height="120" rx="14"></rect>
+              <rect class="node-rail" x="40" y="180" width="5" height="120" rx="2.5"></rect>
+              <circle class="node-dot" cx="207" cy="198" r="3"></circle>
+              <text class="node-title" x="60" y="207">CLIENT</text>
+              <text class="node-sub" x="60" y="228">SPA / HTTP consumer</text>
+              <text class="node-mono" x="60" y="248">credential: token cookie</text>
+              <text class="node-mono" x="60" y="264">outside this repository</text>
+            </g>
+
+            <path class="map-arrow" d="M225 240 C260 240 275 177 305 177"></path>
+            <text class="arrow-label" x="238" y="258">HTTP</text>
+
+            <g class="map-node" data-layer="middleware" tabindex="0" role="button" aria-label="Inspect middleware layer" style="--accent: var(--cyan)">
+              <title>Global middleware — rate limit, helmet, CORS, JSON, cookies</title>
+              <rect class="node-body" x="305" y="142" width="500" height="70" rx="12"></rect>
+              <rect class="node-rail" x="305" y="142" width="5" height="70" rx="2.5"></rect>
+              <circle class="node-dot" cx="785" cy="160" r="3"></circle>
+              <text class="node-title" x="324" y="166">MIDDLEWARE CHAIN</text>
+              <text class="node-sub" x="324" y="185">rate limit 40/min/IP  →  helmet  →  cors</text>
+              <text class="node-mono" x="324" y="200">express.json()  →  cookieParser()</text>
+            </g>
+
+            <path class="map-arrow" d="M555 212 V228"></path>
+            <g class="map-node" data-layer="routers" tabindex="0" role="button" aria-label="Inspect routers layer" style="--accent: var(--mint)">
+              <title>Routers — seven mounted API surfaces</title>
+              <rect class="node-body" x="305" y="228" width="500" height="70" rx="12"></rect>
+              <rect class="node-rail" x="305" y="228" width="5" height="70" rx="2.5"></rect>
+              <circle class="node-dot" cx="785" cy="246" r="3"></circle>
+              <text class="node-title" x="324" y="252">ROUTER FAN-OUT</text>
+              <text class="node-sub" x="324" y="271">/api/auth · courses · lessons · quizzes</text>
+              <text class="node-mono" x="324" y="286">questions · options · quiz-attempts · 7 mounted</text>
+            </g>
+
+            <path class="map-arrow" d="M555 298 V314"></path>
+            <g class="map-node" data-layer="controllers" tabindex="0" role="button" aria-label="Inspect controllers layer" style="--accent: var(--violet)">
+              <title>Controllers — thin request handlers wrapped in asyncHandler</title>
+              <rect class="node-body" x="305" y="314" width="500" height="70" rx="12"></rect>
+              <rect class="node-rail" x="305" y="314" width="5" height="70" rx="2.5"></rect>
+              <circle class="node-dot" cx="785" cy="332" r="3"></circle>
+              <text class="node-title" x="324" y="338">CONTROLLERS</text>
+              <text class="node-sub" x="324" y="357">parse params / body  →  call one service  →  JSON</text>
+              <text class="node-mono" x="324" y="372">asyncHandler catches every rejected promise</text>
+            </g>
+
+            <path class="map-arrow" d="M555 384 V400"></path>
+            <g class="map-node" data-layer="services" tabindex="0" role="button" aria-label="Inspect service layer" style="--accent: var(--amber)">
+              <title>Service layer — one class per domain, business rules and Drizzle queries</title>
+              <rect class="node-body" x="305" y="400" width="500" height="70" rx="12"></rect>
+              <rect class="node-rail" x="305" y="400" width="5" height="70" rx="2.5"></rect>
+              <circle class="node-dot" cx="785" cy="418" r="3"></circle>
+              <text class="node-title" x="324" y="424">SERVICE LAYER</text>
+              <text class="node-sub" x="324" y="443">8 classes · one per domain · business rules</text>
+              <text class="node-mono" x="324" y="458">Drizzle queries · CourseService cache branch</text>
+            </g>
+
+            <path class="map-arrow" d="M555 470 V486"></path>
+            <g class="map-node" data-layer="orm" tabindex="0" role="button" aria-label="Inspect Drizzle ORM layer" style="--accent: var(--rose)">
+              <title>Drizzle ORM — node-postgres driver over a shared pg Pool</title>
+              <rect class="node-body" x="305" y="486" width="500" height="44" rx="10"></rect>
+              <rect class="node-rail" x="305" y="486" width="5" height="44" rx="2.5"></rect>
+              <circle class="node-dot" cx="785" cy="502" r="3"></circle>
+              <text class="node-title" x="324" y="504">DRIZZLE ORM</text>
+              <text class="node-mono" x="324" y="520">node-postgres · shared pg Pool · schema in src/db</text>
+            </g>
+
+            <g class="map-node" data-layer="redis" tabindex="0" role="button" aria-label="Inspect Redis" style="--accent: var(--amber)">
+              <title>Redis 7 — course catalog cache</title>
+              <rect class="node-body" x="900" y="130" width="250" height="150" rx="14"></rect>
+              <rect class="node-rail" x="900" y="130" width="5" height="150" rx="2.5"></rect>
+              <circle class="node-dot" cx="1130" cy="148" r="3"></circle>
+              <text class="node-title" x="920" y="158">REDIS 7</text>
+              <text class="node-sub" x="920" y="178">Course catalog cache</text>
+              <text class="node-mono" x="920" y="198">key: allCourses</text>
+              <text class="node-mono" x="920" y="214">TTL: 600 seconds</text>
+              <text class="node-mono" x="920" y="230">container: redis-eduvision</text>
+              <text class="node-mono" x="920" y="246">connected at startup</text>
+            </g>
+
+            <g class="map-node" data-layer="postgres" tabindex="0" role="button" aria-label="Inspect PostgreSQL" style="--accent: var(--mint)">
+              <title>PostgreSQL 17 — primary datastore</title>
+              <rect class="node-body" x="900" y="360" width="250" height="170" rx="14"></rect>
+              <rect class="node-rail" x="900" y="360" width="5" height="170" rx="2.5"></rect>
+              <circle class="node-dot" cx="1130" cy="378" r="3"></circle>
+              <text class="node-title" x="920" y="388">POSTGRESQL 17</text>
+              <text class="node-sub" x="920" y="408">Primary relational store</text>
+              <text class="node-mono" x="920" y="428">9 tables · 10 foreign keys</text>
+              <text class="node-mono" x="920" y="444">container: db-eduvision</text>
+              <text class="node-mono" x="920" y="460">volume: postgres-db</text>
+              <text class="node-mono" x="920" y="476">host :5433  →  container :5432</text>
+              <text class="node-mono" x="920" y="500">healthcheck: pg_isready</text>
+            </g>
+
+            <path class="map-arrow" d="M805 435 C858 435 858 205 900 205"></path>
+            <text class="arrow-label" x="850" y="330">cache</text>
+            <path class="map-arrow" d="M805 508 C858 508 858 445 900 445"></path>
+            <text class="arrow-label" x="850" y="475">SQL</text>
+
+            <g class="map-node" data-layer="smtp" tabindex="0" role="button" aria-label="Inspect Nodemailer integration" style="--accent: var(--rose)">
+              <title>Nodemailer — declared dependency, not wired in source</title>
+              <rect class="node-body node-dashed" x="900" y="610" width="250" height="70" rx="14"></rect>
+              <rect class="node-rail" x="900" y="610" width="5" height="70" rx="2.5"></rect>
+              <circle class="node-dot" cx="1130" cy="628" r="3"></circle>
+              <text class="node-title" x="920" y="634">NODEMAILER</text>
+              <text class="node-sub" x="920" y="652">Gmail SMTP · declared only</text>
+              <text class="node-mono" x="920" y="668">no import in current src/</text>
+            </g>
+            <text class="cluster-label" x="900" y="600">External · not wired</text>
+            <path class="map-arrow dashed" d="M835 535 C870 535 870 645 900 645"></path>
+            <text class="arrow-label" x="848" y="588">not wired</text>
+          </svg>
+        </div>
+        <div class="map-legend">
+          <span class="legend-item"><span class="legend-swatch"></span>live call in source</span>
+          <span class="legend-item"><span class="legend-swatch dashed"></span>declared / not wired</span>
+          <span class="legend-item"><span class="legend-dot"></span>active connection</span>
+        </div>
+      </div>
+
+      <aside class="panel inspector" aria-live="polite">
+        <div class="panel-head" style="padding:0;border:0;">
+          <span class="panel-kicker">Layer inspector</span>
+          <span class="tag tag-live" id="layer-status">Active</span>
+        </div>
+        <h3 id="layer-title">Middleware chain</h3>
+        <p id="layer-desc">Every request crosses the same five global middleware before any router sees it.</p>
+        <ul class="inspector-points" id="layer-points"></ul>
+        <div class="file-chip" id="layer-files"></div>
+      </aside>
+    </div>
+    <div class="fact-strip reveal">
+      <div class="fact"><b>40 / min</b><span>rate limit per IP</span></div>
+      <div class="fact"><b>7 → 39</b><span>routers → endpoints</span></div>
+      <div class="fact"><b>8 classes</b><span>domain services</span></div>
+      <div class="fact"><b>2 stores</b><span>Postgres + Redis</span></div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="modules">
+    <header class="section-head reveal">
+      <div>
+        <div class="eyebrow">02 · Modules &amp; responsibilities</div>
+        <h2>Seven live domains, three not-yet-wired surfaces</h2>
+      </div>
+      <p class="section-note">Every live module follows router → controller → service. Only auth exposes public routes; the rest sit behind the cookie guard. Click any card for its actual routes and observations.</p>
+    </header>
+    <div class="filter-row reveal" role="group" aria-label="Filter modules by status">
+      <button class="filter-chip is-active" type="button" data-filter="all">All <span>10</span></button>
+      <button class="filter-chip" type="button" data-filter="live">Live <span>7</span></button>
+      <button class="filter-chip" type="button" data-filter="partial">Partial <span>1</span></button>
+      <button class="filter-chip" type="button" data-filter="schema">Schema only <span>1</span></button>
+      <button class="filter-chip" type="button" data-filter="planned">Planned <span>1</span></button>
+    </div>
+    <div class="module-grid reveal" id="module-grid">
+      <article class="module-card accent-mint" data-module="auth" data-status="live" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6l7-3z"/><path d="M9.5 10.5l1.8 1.8 3.4-3.4"/></svg></span>
+          <span class="tag tag-live">Live</span>
+        </div>
+        <h3>Auth &amp; users</h3>
+        <div class="module-service">AuthService</div>
+        <p>Registration, bcrypt login, cookie JWT issuance, admin user control, logout.</p>
+        <div class="module-foot"><span>6 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+      <article class="module-card accent-cyan" data-module="courses" data-status="live" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3V9z"/></svg></span>
+          <span class="tag tag-live">Live</span>
+        </div>
+        <h3>Courses</h3>
+        <div class="module-service">CourseService</div>
+        <p>Course CRUD with admin ownership and a Redis-cached nested catalog.</p>
+        <div class="module-foot"><span>5 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+      <article class="module-card accent-mint" data-module="lessons" data-status="live" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2"/></svg></span>
+          <span class="tag tag-live">Live</span>
+        </div>
+        <h3>Lessons</h3>
+        <div class="module-service">LessonsService</div>
+        <p>Lesson metadata and course-scoped CRUD; duration only, no video asset.</p>
+        <div class="module-foot"><span>6 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+      <article class="module-card accent-violet" data-module="quizzes" data-status="live" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3h4z"/><path d="M8 12l2.5 2.5L16 9"/></svg></span>
+          <span class="tag tag-live">Live</span>
+        </div>
+        <h3>Quizzes</h3>
+        <div class="module-service">QuizzesService</div>
+        <p>One quiz per lesson, with quiz CRUD and lesson lookup.</p>
+        <div class="module-foot"><span>6 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+      <article class="module-card accent-cyan" data-module="questions" data-status="live" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.8.3-.9 1-.9 1.7"/><circle cx="12" cy="17" r=".8" fill="currentColor"/><circle cx="12" cy="12" r="9"/></svg></span>
+          <span class="tag tag-live">Live</span>
+        </div>
+        <h3>Questions</h3>
+        <div class="module-service">QuestionsService</div>
+        <p>Question text for each quiz; CRUD plus quiz lookup.</p>
+        <div class="module-foot"><span>6 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+      <article class="module-card accent-amber" data-module="options" data-status="live" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span>
+          <span class="tag tag-live">Live</span>
+        </div>
+        <h3>Options</h3>
+        <div class="module-service">OptionsService</div>
+        <p>Answer choices and a standalone answer-check endpoint.</p>
+        <div class="module-foot"><span>7 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+      <article class="module-card accent-rose" data-module="attempts" data-status="live" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+          <span class="tag tag-live">Live</span>
+        </div>
+        <h3>Quiz attempts</h3>
+        <div class="module-service">QuizAttemptsService</div>
+        <p>Server-graded submissions with a one-attempt-per-user rule.</p>
+        <div class="module-foot"><span>3 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+      <article class="module-card accent-amber" data-module="enrollments" data-status="partial" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v10H4z"/><path d="M9 7V5h6v2M4 11h16"/></svg></span>
+          <span class="tag tag-partial">Partial</span>
+        </div>
+        <h3>Enrollments</h3>
+        <div class="module-service">EnrollmentService</div>
+        <p>Schema and service skeleton for linking a student to a course; not mounted.</p>
+        <div class="module-foot"><span>0 mounted routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+      <article class="module-card accent-violet" data-module="payments" data-status="schema" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span>
+          <span class="tag tag-schema">Schema only</span>
+        </div>
+        <h3>Payments</h3>
+        <div class="module-service">No service in src</div>
+        <p>Payment records tied to an enrollment, with manual Vodafone Cash / InstaPay metadata.</p>
+        <div class="module-foot"><span>0 mounted routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+      <article class="module-card accent-rose" data-module="certificates" data-status="planned" tabindex="0" role="button" aria-haspopup="dialog">
+        <div class="module-top">
+          <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-2.5L17 21l-1.5-7.5"/></svg></span>
+          <span class="tag tag-planned">Planned</span>
+        </div>
+        <h3>Certificates</h3>
+        <div class="module-service">Not built</div>
+        <p>README target: issue a certificate once a learner completes a course.</p>
+        <div class="module-foot"><span>0 tables · 0 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      </article>
+    </div>
+  </section>
+  <section class="section wrap" id="routes">
+    <header class="section-head reveal">
+      <div>
+        <div class="eyebrow">03 · API surface</div>
+        <h2>All 39 routes, one cookie, two roles</h2>
+      </div>
+      <p class="section-note">Only registration and login are public. Every other route requires the signed <code>token</code> cookie; mutations are admin-only except quiz submission and the student profile patch.</p>
+    </header>
+    <div class="panel reveal">
+      <div class="table-toolbar">
+        <label class="search-wrap" for="endpoint-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+          <input id="endpoint-search" type="search" placeholder="Search path, service, or operation…" autocomplete="off">
+        </label>
+        <select id="method-filter" aria-label="Filter by HTTP method">
+          <option value="all">All methods</option>
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="PATCH">PATCH</option>
+          <option value="DELETE">DELETE</option>
+        </select>
+        <select id="access-filter" aria-label="Filter by access level">
+          <option value="all">All access</option>
+          <option value="public">Public</option>
+          <option value="auth">Any signed-in</option>
+          <option value="student">Student only</option>
+          <option value="admin">Admin only</option>
+        </select>
+        <button class="btn-quiet small" id="reset-filters" type="button">Reset</button>
+        <span class="result-count" id="endpoint-count">39 of 39 routes</span>
+      </div>
+      <div class="table-scroll">
+        <table class="endpoint-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Access</th><th>Service</th><th>What it does</th></tr>
+          </thead>
+          <tbody id="endpoint-body">
+            <tr data-method="POST" data-access="public" data-search="auth register create user signup">
+              <td><span class="method method-post">POST</span></td><td><code>/api/auth/register</code></td><td><span class="access access-public">Public</span></td><td>AuthService</td><td>Create a user; password hashed with bcrypt cost 12.</td>
+            </tr>
+            <tr data-method="POST" data-access="public" data-search="auth login authenticate signin jwt cookie">
+              <td><span class="method method-post">POST</span></td><td><code>/api/auth/login</code></td><td><span class="access access-public">Public</span></td><td>AuthService</td><td>Verify credentials and set the httpOnly JWT cookie.</td>
+            </tr>
+            <tr data-method="POST" data-access="auth" data-search="auth logout clear cookie">
+              <td><span class="method method-post">POST</span></td><td><code>/api/auth/logout</code></td><td><span class="access access-auth">Any auth</span></td><td>AuthService</td><td>Clear the token cookie; the JWT itself is not revoked.</td>
+            </tr>
+            <tr data-method="GET" data-access="admin" data-search="auth users list all users admin">
+              <td><span class="method method-get">GET</span></td><td><code>/api/auth/</code></td><td><span class="access access-admin">Admin</span></td><td>AuthService</td><td>List every user record.</td>
+            </tr>
+            <tr data-method="DELETE" data-access="admin" data-search="auth delete user admin id">
+              <td><span class="method method-delete">DELETE</span></td><td><code>/api/auth/:id</code></td><td><span class="access access-admin">Admin</span></td><td>AuthService</td><td>Delete a user by id.</td>
+            </tr>
+            <tr data-method="PATCH" data-access="student" data-search="auth update user profile student id">
+              <td><span class="method method-patch">PATCH</span></td><td><code>/api/auth/:id</code></td><td><span class="access access-student">Student</span></td><td>AuthService</td><td>Update a user profile; route is student-only and id is unscoped.</td>
+            </tr>
+            <tr data-method="POST" data-access="admin" data-search="courses create course admin">
+              <td><span class="method method-post">POST</span></td><td><code>/api/courses/</code></td><td><span class="access access-admin">Admin</span></td><td>CourseService</td><td>Create a course owned by the authenticated admin.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="courses list catalog redis cache nested">
+              <td><span class="method method-get">GET</span></td><td><code>/api/courses/</code></td><td><span class="access access-auth">Any auth</span></td><td>CourseService</td><td>Return courses, caching the nested catalog for 600s.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="courses get course by id detail">
+              <td><span class="method method-get">GET</span></td><td><code>/api/courses/:id</code></td><td><span class="access access-auth">Any auth</span></td><td>CourseService</td><td>Fetch one course with its related records.</td>
+            </tr>
+            <tr data-method="PATCH" data-access="admin" data-search="courses update course admin">
+              <td><span class="method method-patch">PATCH</span></td><td><code>/api/courses/:id</code></td><td><span class="access access-admin">Admin</span></td><td>CourseService</td><td>Update course fields; no cache invalidation.</td>
+            </tr>
+            <tr data-method="DELETE" data-access="admin" data-search="courses delete course admin">
+              <td><span class="method method-delete">DELETE</span></td><td><code>/api/courses/:id</code></td><td><span class="access access-admin">Admin</span></td><td>CourseService</td><td>Delete a course; cascade behavior comes from the schema.</td>
+            </tr>
+            <tr data-method="POST" data-access="admin" data-search="lessons create lesson admin">
+              <td><span class="method method-post">POST</span></td><td><code>/api/lessons/</code></td><td><span class="access access-admin">Admin</span></td><td>LessonsService</td><td>Create a lesson with a title and duration.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="lessons list all lessons">
+              <td><span class="method method-get">GET</span></td><td><code>/api/lessons/</code></td><td><span class="access access-auth">Any auth</span></td><td>LessonsService</td><td>List every lesson.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="lessons by course course_id">
+              <td><span class="method method-get">GET</span></td><td><code>/api/lessons/course/:course_id</code></td><td><span class="access access-auth">Any auth</span></td><td>LessonsService</td><td>List lessons that belong to one course.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="lessons lesson by id detail">
+              <td><span class="method method-get">GET</span></td><td><code>/api/lessons/:id</code></td><td><span class="access access-auth">Any auth</span></td><td>LessonsService</td><td>Fetch one lesson.</td>
+            </tr>
+            <tr data-method="PATCH" data-access="admin" data-search="lessons update lesson admin">
+              <td><span class="method method-patch">PATCH</span></td><td><code>/api/lessons/:id</code></td><td><span class="access access-admin">Admin</span></td><td>LessonsService</td><td>Update lesson metadata.</td>
+            </tr>
+            <tr data-method="DELETE" data-access="admin" data-search="lessons delete lesson admin">
+              <td><span class="method method-delete">DELETE</span></td><td><code>/api/lessons/:id</code></td><td><span class="access access-admin">Admin</span></td><td>LessonsService</td><td>Delete a lesson by id.</td>
+            </tr>
+            <tr data-method="POST" data-access="admin" data-search="quizzes create quiz admin">
+              <td><span class="method method-post">POST</span></td><td><code>/api/quizzes/</code></td><td><span class="access access-admin">Admin</span></td><td>QuizzesService</td><td>Create the quiz for a lesson; the lesson is unique.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="quizzes list all quizzes">
+              <td><span class="method method-get">GET</span></td><td><code>/api/quizzes/</code></td><td><span class="access access-auth">Any auth</span></td><td>QuizzesService</td><td>List every quiz.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="quizzes by lesson lesson_id">
+              <td><span class="method method-get">GET</span></td><td><code>/api/quizzes/lesson/:lesson_id</code></td><td><span class="access access-auth">Any auth</span></td><td>QuizzesService</td><td>Fetch the quiz attached to a lesson.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="quizzes quiz by id detail">
+              <td><span class="method method-get">GET</span></td><td><code>/api/quizzes/:id</code></td><td><span class="access access-auth">Any auth</span></td><td>QuizzesService</td><td>Fetch one quiz.</td>
+            </tr>
+            <tr data-method="PATCH" data-access="admin" data-search="quizzes update quiz admin">
+              <td><span class="method method-patch">PATCH</span></td><td><code>/api/quizzes/:id</code></td><td><span class="access access-admin">Admin</span></td><td>QuizzesService</td><td>Update quiz fields.</td>
+            </tr>
+            <tr data-method="DELETE" data-access="admin" data-search="quizzes delete quiz admin">
+              <td><span class="method method-delete">DELETE</span></td><td><code>/api/quizzes/:id</code></td><td><span class="access access-admin">Admin</span></td><td>QuizzesService</td><td>Delete a quiz by id.</td>
+            </tr>
+            <tr data-method="POST" data-access="admin" data-search="questions create question admin">
+              <td><span class="method method-post">POST</span></td><td><code>/api/questions/</code></td><td><span class="access access-admin">Admin</span></td><td>QuestionsService</td><td>Add a prompt to a quiz.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="questions list all questions">
+              <td><span class="method method-get">GET</span></td><td><code>/api/questions/</code></td><td><span class="access access-auth">Any auth</span></td><td>QuestionsService</td><td>List every question.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="questions by quiz quiz_id">
+              <td><span class="method method-get">GET</span></td><td><code>/api/questions/quiz/:quiz_id</code></td><td><span class="access access-auth">Any auth</span></td><td>QuestionsService</td><td>List the questions inside one quiz.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="questions question by id detail">
+              <td><span class="method method-get">GET</span></td><td><code>/api/questions/:id</code></td><td><span class="access access-auth">Any auth</span></td><td>QuestionsService</td><td>Fetch one question.</td>
+            </tr>
+            <tr data-method="PATCH" data-access="admin" data-search="questions update question admin">
+              <td><span class="method method-patch">PATCH</span></td><td><code>/api/questions/:id</code></td><td><span class="access access-admin">Admin</span></td><td>QuestionsService</td><td>Update a question prompt.</td>
+            </tr>
+            <tr data-method="DELETE" data-access="admin" data-search="questions delete question admin">
+              <td><span class="method method-delete">DELETE</span></td><td><code>/api/questions/:id</code></td><td><span class="access access-admin">Admin</span></td><td>QuestionsService</td><td>Delete a question by id.</td>
+            </tr>
+            <tr data-method="POST" data-access="admin" data-search="options create option answer choice admin">
+              <td><span class="method method-post">POST</span></td><td><code>/api/options/</code></td><td><span class="access access-admin">Admin</span></td><td>OptionsService</td><td>Add an answer choice to a question.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="options list all options">
+              <td><span class="method method-get">GET</span></td><td><code>/api/options/</code></td><td><span class="access access-auth">Any auth</span></td><td>OptionsService</td><td>List every answer option.</td>
+            </tr>
+            <tr data-method="POST" data-access="auth" data-search="options check answer validate correct">
+              <td><span class="method method-post">POST</span></td><td><code>/api/options/check-answer</code></td><td><span class="access access-auth">Any auth</span></td><td>OptionsService</td><td>Standalone check of whether an option is correct.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="options by question question_id">
+              <td><span class="method method-get">GET</span></td><td><code>/api/options/question/:question_id</code></td><td><span class="access access-auth">Any auth</span></td><td>OptionsService</td><td>List the options for one question.</td>
+            </tr>
+            <tr data-method="GET" data-access="auth" data-search="options option by id detail">
+              <td><span class="method method-get">GET</span></td><td><code>/api/options/:id</code></td><td><span class="access access-auth">Any auth</span></td><td>OptionsService</td><td>Fetch one answer option.</td>
+            </tr>
+            <tr data-method="PATCH" data-access="admin" data-search="options update option admin">
+              <td><span class="method method-patch">PATCH</span></td><td><code>/api/options/:id</code></td><td><span class="access access-admin">Admin</span></td><td>OptionsService</td><td>Update option text or correctness.</td>
+            </tr>
+            <tr data-method="DELETE" data-access="admin" data-search="options delete option admin">
+              <td><span class="method method-delete">DELETE</span></td><td><code>/api/options/:id</code></td><td><span class="access access-admin">Admin</span></td><td>OptionsService</td><td>Delete an answer option.</td>
+            </tr>
+            <tr data-method="POST" data-access="student" data-search="attempts submit quiz answers score grade student">
+              <td><span class="method method-post">POST</span></td><td><code>/api/quiz-attempts/</code></td><td><span class="access access-student">Student</span></td><td>QuizAttemptsService</td><td>Grade answers server-side and persist one attempt.</td>
+            </tr>
+            <tr data-method="GET" data-access="student" data-search="attempts my history me student">
+              <td><span class="method method-get">GET</span></td><td><code>/api/quiz-attempts/me</code></td><td><span class="access access-student">Student</span></td><td>QuizAttemptsService</td><td>Return the caller's own attempt history.</td>
+            </tr>
+            <tr data-method="GET" data-access="admin" data-search="attempts by quiz quiz_id admin results">
+              <td><span class="method method-get">GET</span></td><td><code>/api/quiz-attempts/quiz/:quiz_id</code></td><td><span class="access access-admin">Admin</span></td><td>QuizAttemptsService</td><td>Return all attempts for one quiz.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-empty" id="table-empty" hidden>No routes match those filters.</div>
+      </div>
+    </div>
+    <div class="callout reveal">
+      <span class="callout-icon" aria-hidden="true">!</span>
+      <div><strong>Route-order note.</strong> Static paths such as <code>/me</code>, <code>/check-answer</code>, and <code>/course/:course_id</code> are registered before <code>/:id</code>, so Express does not swallow them as ids.</div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="data">
+    <header class="section-head reveal">
+      <div>
+        <div class="eyebrow">04 · Data model</div>
+        <h2>Nine tables, ten foreign keys</h2>
+      </div>
+      <p class="section-note">The catalog is course → lesson → quiz → question → option. Users attach to attempts, enrollments, and payments. Click a table to inspect its columns and relationships.</p>
+    </header>
+    <div class="data-layout reveal">
+      <div class="panel erd-panel">
+        <div class="panel-head">
+          <span class="panel-kicker">Drizzle schema</span>
+          <span class="hint">Click an entity</span>
+        </div>
+        <div class="diagram-scroll erd-scroll">
+          <svg class="erd" viewBox="0 0 1000 690" role="img" aria-label="Entity relationship diagram for EduVision">
+            <defs>
+              <marker id="erd-many" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+                <path d="M0 1 L7 5 L0 9" fill="none" stroke="var(--cyan)" stroke-width="1.4"></path>
+              </marker>
+            </defs>
+            <g class="erd-edge">
+              <path d="M190 112 C230 112 260 112 300 112" marker-end="url(#erd-many)"></path>
+              <text x="222" y="104">admin_id</text>
+              <path d="M395 144 V200" marker-end="url(#erd-many)"></path>
+              <text x="405" y="176">course_id</text>
+              <path d="M395 264 V320" marker-end="url(#erd-many)"></path>
+              <text x="405" y="296">lesson_id · 1:1</text>
+              <path d="M395 384 V440" marker-end="url(#erd-many)"></path>
+              <text x="405" y="416">quiz_id</text>
+              <path d="M395 504 V560" marker-end="url(#erd-many)"></path>
+              <text x="405" y="536">question_id</text>
+              <path d="M105 144 V300" marker-end="url(#erd-many)"></path>
+              <text x="114" y="226">user_id</text>
+              <path d="M330 144 C270 180 220 255 200 300" marker-end="url(#erd-many)"></path>
+              <text x="238" y="214">course_id</text>
+              <path d="M110 368 V470" marker-end="url(#erd-many)"></path>
+              <text x="119" y="424">enrollment_id</text>
+              <path d="M490 352 H610" marker-end="url(#erd-many)"></path>
+              <text x="520" y="344">quiz_id</text>
+              <path d="M190 96 C370 28 650 28 700 320" marker-end="url(#erd-many)"></path>
+              <text x="500" y="46">user_id</text>
+            </g>
+
+            <g class="entity-node" data-entity="users" tabindex="0" role="button" aria-label="Inspect users table" transform="translate(20 80)">
+              <rect class="entity-box" width="170" height="64" rx="10"></rect>
+              <rect class="entity-bar" width="4" height="64" rx="2"></rect>
+              <text class="entity-name" x="16" y="27">users</text>
+              <text class="entity-meta" x="16" y="47">7 columns · 2 FKs point here</text>
+            </g>
+            <g class="entity-node" data-entity="courses" tabindex="0" role="button" aria-label="Inspect courses table" transform="translate(300 80)">
+              <rect class="entity-box" width="190" height="64" rx="10"></rect>
+              <rect class="entity-bar" width="4" height="64" rx="2"></rect>
+              <text class="entity-name" x="16" y="27">courses</text>
+              <text class="entity-meta" x="16" y="47">6 columns · priced catalog root</text>
+            </g>
+            <g class="entity-node" data-entity="lessons" tabindex="0" role="button" aria-label="Inspect lessons table" transform="translate(300 200)">
+              <rect class="entity-box" width="190" height="64" rx="10"></rect>
+              <rect class="entity-bar" width="4" height="64" rx="2"></rect>
+              <text class="entity-name" x="16" y="27">lessons</text>
+              <text class="entity-meta" x="16" y="47">5 cols · no video asset</text>
+            </g>
+            <g class="entity-node" data-entity="quizzes" tabindex="0" role="button" aria-label="Inspect quizzes table" transform="translate(300 320)">
+              <rect class="entity-box" width="190" height="64" rx="10"></rect>
+              <rect class="entity-bar" width="4" height="64" rx="2"></rect>
+              <text class="entity-name" x="16" y="27">quizzes</text>
+              <text class="entity-meta" x="16" y="47">4 cols · unique lesson_id</text>
+            </g>
+            <g class="entity-node" data-entity="questions" tabindex="0" role="button" aria-label="Inspect questions table" transform="translate(300 440)">
+              <rect class="entity-box" width="190" height="64" rx="10"></rect>
+              <rect class="entity-bar" width="4" height="64" rx="2"></rect>
+              <text class="entity-name" x="16" y="27">questions</text>
+              <text class="entity-meta" x="16" y="47">4 columns · belongs to quiz</text>
+            </g>
+            <g class="entity-node" data-entity="options" tabindex="0" role="button" aria-label="Inspect options table" transform="translate(300 560)">
+              <rect class="entity-box" width="190" height="64" rx="10"></rect>
+              <rect class="entity-bar" width="4" height="64" rx="2"></rect>
+              <text class="entity-name" x="16" y="27">options</text>
+              <text class="entity-meta" x="16" y="47">5 cols · is_correct flag</text>
+            </g>
+            <g class="entity-node" data-entity="enrollments" tabindex="0" role="button" aria-label="Inspect enrollments table" transform="translate(20 300)">
+              <rect class="entity-box" width="180" height="68" rx="10"></rect>
+              <rect class="entity-bar" width="4" height="68" rx="2"></rect>
+              <text class="entity-name" x="16" y="27">enrollments</text>
+              <text class="entity-meta" x="16" y="47">5 cols · unique user+course</text>
+              <text class="entity-meta" x="16" y="61">no mounted API</text>
+            </g>
+            <g class="entity-node" data-entity="payments" tabindex="0" role="button" aria-label="Inspect payments table" transform="translate(20 470)">
+              <rect class="entity-box" width="180" height="68" rx="10"></rect>
+              <rect class="entity-bar" width="4" height="68" rx="2"></rect>
+              <text class="entity-name" x="16" y="27">payments</text>
+              <text class="entity-meta" x="16" y="47">11 cols · manual transfer</text>
+              <text class="entity-meta" x="16" y="61">schema only</text>
+            </g>
+            <g class="entity-node" data-entity="attempts" tabindex="0" role="button" aria-label="Inspect quiz attempts table" transform="translate(610 320)">
+              <rect class="entity-box" width="190" height="68" rx="10"></rect>
+              <rect class="entity-bar" width="4" height="68" rx="2"></rect>
+              <text class="entity-name" x="16" y="27">quiz_attempts</text>
+              <text class="entity-meta" x="16" y="47">5 cols · score only</text>
+              <text class="entity-meta" x="16" y="61">unique user + quiz</text>
+            </g>
+
+            <g class="legend-box" transform="translate(20 656)">
+              <text class="erd-legend" x="0" y="0">— foreign key</text>
+              <text class="erd-legend" x="150" y="0">▸ points to referenced table</text>
+              <text class="erd-legend" x="390" y="0">enrollments.status · payments.status · payments.method · users.role</text>
+            </g>
+          </svg>
+        </div>
+        <div class="schema-stats">
+          <span><b>9</b> tables</span><span><b>10</b> foreign keys</span><span><b>4</b> enums</span><span><b>4</b> unique constraints</span><span><b>3</b> indexes</span>
+        </div>
+      </div>
+      <aside class="panel inspector entity-inspector" aria-live="polite">
+        <div class="panel-head" style="padding:0;border:0;">
+          <span class="panel-kicker">Entity inspector</span>
+          <span class="tag tag-live" id="entity-kind">Table</span>
+        </div>
+        <h3 id="entity-title">users</h3>
+        <p id="entity-desc">Select a table in the diagram.</p>
+        <div class="entity-columns" id="entity-columns"></div>
+        <div class="entity-relations" id="entity-relations"></div>
+        <div class="file-chip" id="entity-note"></div>
+      </aside>
+    </div>
+  </section>
+  <section class="section wrap" id="auth">
+    <header class="section-head reveal">
+      <div>
+        <div class="eyebrow">05 · Authentication</div>
+        <h2>A 30-day JWT inside a 7-day cookie</h2>
+      </div>
+      <p class="section-note">Login signs an HS256 token carrying only <code>id</code> and <code>role</code>, then places it in an httpOnly cookie. The token lifetime exceeds the cookie lifetime, and logout only clears the browser copy.</p>
+    </header>
+    <div class="auth-layout reveal">
+      <div class="panel auth-panel">
+        <div class="panel-head">
+          <div class="flow-tabs" role="tablist" aria-label="Authentication flows">
+            <button class="flow-tab is-active" type="button" role="tab" aria-selected="true" data-flow="login">Login</button>
+            <button class="flow-tab" type="button" role="tab" aria-selected="false" data-flow="register">Register</button>
+            <button class="flow-tab" type="button" role="tab" aria-selected="false" data-flow="guard">Guarded request</button>
+            <button class="flow-tab" type="button" role="tab" aria-selected="false" data-flow="logout">Logout</button>
+          </div>
+          <span class="hint">Happy path</span>
+        </div>
+        <div class="flow-caption">
+          <div class="flow-kicker" id="flow-kicker">POST /api/auth/login</div>
+          <h3 id="flow-title">Credentials become a cookie</h3>
+          <p id="flow-desc">The service compares the submitted password with the stored bcrypt hash, signs a JWT, and returns it in a strict httpOnly cookie.</p>
+        </div>
+        <div class="sequence-scroll">
+          <svg class="sequence" id="auth-diagram" viewBox="0 0 900 390" role="img" aria-label="Sequence diagram of the selected authentication flow"></svg>
+        </div>
+        <ol class="flow-steps" id="auth-steps"></ol>
+      </div>
+      <aside class="panel auth-facts">
+        <div class="panel-head" style="padding:0;border:0;">
+          <span class="panel-kicker">Token facts</span>
+          <span class="tag tag-partial">Cookie ≠ session</span>
+        </div>
+        <div class="token-visual">
+          <div class="token-part header">header <span>HS256</span></div>
+          <div class="token-part payload">payload <span>{ id, role }</span></div>
+          <div class="token-part signature">signature <span>JWT_SECRET</span></div>
+        </div>
+        <ul class="mini-list">
+          <li><span>Algorithm</span><b>HS256</b></li>
+          <li><span>Token expiry</span><b>30 days</b></li>
+          <li><span>Cookie maxAge</span><b>7 days</b></li>
+          <li><span>httpOnly</span><b>true</b></li>
+          <li><span>sameSite</span><b>strict</b></li>
+          <li><span>secure</span><b>not set</b></li>
+          <li><span>Revocation</span><b>none</b></li>
+          <li><span>Password hash</span><b>bcrypt · 12</b></li>
+        </ul>
+        <p class="aside-note">A copied or already-issued token stays valid until its own 30-day expiry even after logout. Add a denylist or short-lived access token if revocation matters.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section wrap" id="lifecycle">
+    <header class="section-head reveal">
+      <div>
+        <div class="eyebrow">06 · Request lifecycle</div>
+        <h2>From socket to row and back</h2>
+      </div>
+      <p class="section-note">Walk the ten stages every request crosses. The trace follows a catalog read that hits Redis first, then PostgreSQL on a cache miss.</p>
+    </header>
+    <div class="lifecycle-layout reveal">
+      <div class="panel stage-panel">
+        <div class="panel-head">
+          <span class="panel-kicker">Execution path</span>
+          <button class="btn-quiet small" id="trace-toggle" type="button">Play trace</button>
+        </div>
+        <div class="stage-rail" id="stage-rail" role="tablist" aria-label="Request lifecycle stages"></div>
+      </div>
+      <aside class="panel stage-detail" aria-live="polite">
+        <div class="stage-badge" id="stage-badge">01 / 10</div>
+        <h3 id="stage-title">Socket accepted</h3>
+        <p id="stage-desc">Node's HTTP server accepts the connection and hands the request to the Express app.</p>
+        <div class="stage-code" id="stage-code"><code>app.listen(4000)</code></div>
+        <ul class="stage-points" id="stage-points"></ul>
+        <div class="file-chip" id="stage-files"></div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section wrap" id="integrations">
+    <header class="section-head reveal">
+      <div>
+        <div class="eyebrow">07 · External integrations</div>
+        <h2>What is actually connected</h2>
+      </div>
+      <p class="section-note">PostgreSQL and Redis are live dependencies. Payments and email exist in different states of incompleteness; there is no video provider, object storage, or queue.</p>
+    </header>
+    <div class="integration-grid reveal">
+      <article class="integration-card">
+        <div class="integration-head"><span class="integration-icon" style="--accent: var(--mint)">PG</span><span class="tag tag-live">Connected</span></div>
+        <h3>PostgreSQL 17</h3>
+        <p>Primary store for every domain table. Shared <code>pg.Pool</code> wrapped by Drizzle.</p>
+        <div class="integration-meta"><span>db-eduvision</span><span>5433 → 5432</span><span>volume postgres-db</span></div>
+        <code class="env-line">DATABASE_URL=postgres://…@db-eduvision:5432/eduvision</code>
+      </article>
+      <article class="integration-card">
+        <div class="integration-head"><span class="integration-icon" style="--accent: var(--amber)">RD</span><span class="tag tag-live">Connected</span></div>
+        <h3>Redis 7</h3>
+        <p>Only the course catalog uses it. A failed connection logs a warning without stopping the API.</p>
+        <div class="integration-meta"><span>redis-eduvision</span><span>allCourses</span><span>600s TTL</span></div>
+        <code class="env-line">REDIS_URL=redis://redis-eduvision:6379</code>
+      </article>
+      <article class="integration-card">
+        <div class="integration-head"><span class="integration-icon" style="--accent: var(--violet)">PAY</span><span class="tag tag-schema">Schema only</span></div>
+        <h3>Payments</h3>
+        <p>The payment table records manual Vodafone Cash or InstaPay references against an enrollment. No checkout, webhook, or controller exists.</p>
+        <div class="integration-meta"><span>VCASH</span><span>INSTAPAY</span><span>pending / completed / failed</span></div>
+        <code class="env-line">No provider SDK in package.json</code>
+      </article>
+      <article class="integration-card">
+        <div class="integration-head"><span class="integration-icon" style="--accent: var(--rose)">MAIL</span><span class="tag tag-planned">Not wired</span></div>
+        <h3>Nodemailer</h3>
+        <p>Email is declared in the README and stale compiled files, but current <code>src/</code> never imports or configures it.</p>
+        <div class="integration-meta"><span>nodemailer installed</span><span>no SMTP env</span><span>dist-only remnants</span></div>
+        <code class="env-line">No src import · no transporter</code>
+      </article>
+      <article class="integration-card integration-missing">
+        <div class="integration-head"><span class="integration-icon" style="--accent: var(--cyan)">▶</span><span class="tag tag-planned">Absent</span></div>
+        <h3>Video delivery</h3>
+        <p>Lessons store only a title and duration in seconds. There is no asset URL, provider id, signed playback token, or storage configuration.</p>
+        <div class="integration-meta"><span>no S3</span><span>no Mux/Vimeo</span><span>no signed URLs</span></div>
+        <code class="env-line">lessons: title, duration_sec, course_id…</code>
+      </article>
+      <article class="integration-card integration-missing">
+        <div class="integration-head"><span class="integration-icon" style="--accent: var(--rose)">Q</span><span class="tag tag-planned">Absent</span></div>
+        <h3>Jobs &amp; notifications</h3>
+        <p>No queue, scheduler, outbox, or background worker. Everything happens inside the HTTP request.</p>
+        <div class="integration-meta"><span>no BullMQ</span><span>no cron</span><span>no webhooks</span></div>
+        <code class="env-line">single Express process</code>
+      </article>
+    </div>
+  </section>
+
+  <section class="section wrap" id="gaps">
+    <header class="section-head reveal">
+      <div>
+        <div class="eyebrow">08 · Reality check</div>
+        <h2>Where implementation trails the README</h2>
+      </div>
+      <p class="section-note">These are code-derived gaps, not requests for changes. Each card names the evidence and the practical effect.</p>
+    </header>
+    <div class="gap-grid reveal">
+      <article class="gap-card severity-high">
+        <div class="gap-severity">High</div>
+        <h3>Enrollment path is inert</h3>
+        <p><code>enrollments.router.ts</code> and its controller are empty; the router is never mounted. The service only echoes a message, so students can never actually enroll.</p>
+        <span class="evidence">src/modules/enrollments · server.ts</span>
+      </article>
+      <article class="gap-card severity-high">
+        <div class="gap-severity">High</div>
+        <h3>No content access control</h3>
+        <p>Course, lesson, quiz, question, and option reads require only a valid cookie. There is no check that the student is enrolled in the course being read.</p>
+        <span class="evidence">course/lesson/quiz routers · authenticate only</span>
+      </article>
+      <article class="gap-card severity-medium">
+        <div class="gap-severity">Medium</div>
+        <h3>Catalog cache never invalidates</h3>
+        <p><code>allCourses</code> is written with a 600-second TTL. Create, update, and delete operations never clear it, so fresh mutations can be hidden for up to ten minutes.</p>
+        <span class="evidence">CourseService · cache.service.ts</span>
+      </article>
+      <article class="gap-card severity-medium">
+        <div class="gap-severity">Medium</div>
+        <h3>Logout does not revoke</h3>
+        <p>Clearing the cookie removes the browser copy. The signed JWT remains valid for its full 30-day lifetime if it was captured elsewhere.</p>
+        <span class="evidence">AuthService.logout · token.ts</span>
+      </article>
+      <article class="gap-card severity-medium">
+        <div class="gap-severity">Medium</div>
+        <h3>Student profile patch is unscoped</h3>
+        <p><code>PATCH /api/auth/:id</code> is restricted to the student role but uses the path id rather than the caller's id, letting one student target another record.</p>
+        <span class="evidence">auth.router.ts · AuthService</span>
+      </article>
+      <article class="gap-card severity-medium">
+        <div class="gap-severity">Medium</div>
+        <h3>Wildcard CORS with credentials</h3>
+        <p>The app sets <code>origin: "*"</code> and <code>credentials: true</code>. Browsers reject that combination, and a broad origin policy is risky for cookie auth.</p>
+        <span class="evidence">server.ts</span>
+      </article>
+      <article class="gap-card severity-low">
+        <div class="gap-severity">Low</div>
+        <h3>Email is dead code</h3>
+        <p>Nodemailer appears in dependencies and stale <code>dist/</code> output but is not imported anywhere in current source. There are no SMTP settings to configure.</p>
+        <span class="evidence">package.json · dist/ · no src/</span>
+      </article>
+      <article class="gap-card severity-low">
+        <div class="gap-severity">Low</div>
+        <h3>Video is a missing primitive</h3>
+        <p>The product promises video courses, but the data model cannot identify or authorize a video asset. Delivery would require a schema and infrastructure addition.</p>
+        <span class="evidence">db/schema/lessons.ts</span>
+      </article>
+      <article class="gap-card severity-low">
+        <div class="gap-severity">Low</div>
+        <h3>No production operations layer</h3>
+        <p>No migrations history, health endpoint, structured logger, tests, CI, or graceful shutdown were found. The server calls <code>listen</code> and exports nothing for testing.</p>
+        <span class="evidence">repository root · server.ts</span>
+      </article>
+    </div>
+    <div class="verdict reveal">
+      <div class="verdict-label">Bottom line</div>
+      <p>A coherent CRUD-and-quiz API with working authentication and a sensible modular shape, but not yet a complete course business: enrollment, payments, certificates, and video delivery are unfinished.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer wrap">
+  <div>
+    <div class="brand footer-brand">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6l7-3z"/><path d="M9.5 10.5l1.8 1.8 3.4-3.4"/></svg></span>
+      <span>EduVision<small>backend field guide</small></span>
+    </div>
+    <p>Derived from repository source and README on 09 Nov 2026. Counts and behavior describe the code as found; no application files were modified.</p>
+  </div>
+  <div class="footer-links">
+    <a href="#map">Map</a><a href="#routes">Routes</a><a href="#data">Schema</a><a href="#gaps">Gaps</a>
+  </div>
+</footer>
+
+<div class="dialog-backdrop" id="module-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden>
+  <div class="dialog-card">
+    <button class="dialog-close" id="dialog-close" type="button" aria-label="Close module details">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="dialog-head">
+      <div>
+        <span class="tag" id="dialog-status">Live</span>
+        <h2 id="dialog-title">Auth &amp; users</h2>
+        <div class="dialog-service" id="dialog-service">AuthService</div>
+      </div>
+      <div class="dialog-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6l7-3z"/><path d="M9.5 10.5l1.8 1.8 3.4-3.4"/></svg></div>
+    </div>
+    <p class="dialog-summary" id="dialog-summary"></p>
+    <div class="dialog-columns">
+      <div>
+        <div class="dialog-label">Mounted routes</div>
+        <div class="dialog-routes" id="dialog-routes"></div>
+      </div>
+      <div>
+        <div class="dialog-label">Observations</div>
+        <ul class="dialog-points" id="dialog-points"></ul>
+      </div>
+    </div>
+    <div class="dialog-note" id="dialog-note"></div>
+    <div class="dialog-files file-chip" id="dialog-files"></div>
+  </div>
+</div>
+<script>
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+/* ---------------- theme ---------------- */
+const themeToggle = $("#theme-toggle");
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem("edu-theme", theme); } catch (_) {}
+  themeToggle.setAttribute("aria-label", theme === "night" ? "Switch to light theme" : "Switch to dark theme");
+}
+let savedTheme = "night";
+try { savedTheme = localStorage.getItem("edu-theme") || "night"; } catch (_) {}
+const themeParam = new URLSearchParams(location.search).get("theme");
+if (themeParam === "winter" || themeParam === "night") savedTheme = themeParam;
+setTheme(savedTheme);
+themeToggle.addEventListener("click", () => {
+  setTheme(document.documentElement.dataset.theme === "night" ? "winter" : "night");
+});
+
+/* ---------------- reveal + scroll spy ---------------- */
+const reveals = $$(".reveal");
+if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  reveals.forEach((el) => revealObs.observe(el));
+} else {
+  reveals.forEach((el) => el.classList.add("is-visible"));
+}
+
+const navLinks = $$(".nav a");
+const spySections = navLinks.map((a) => $(a.getAttribute("href"))).filter(Boolean);
+if ("IntersectionObserver" in window) {
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      navLinks.forEach((a) => a.classList.toggle("is-active", a.getAttribute("href") === "#" + entry.target.id));
+    });
+  }, { rootMargin: "-25% 0px -62% 0px", threshold: 0 });
+  spySections.forEach((section) => spy.observe(section));
+}
+
+/* ---------------- map inspector ---------------- */
+const layers = {
+  client: {
+    status: "External", title: "Client / HTTP consumer",
+    desc: "The repository contains only the API. A browser or SPA is expected to call it and retain the token cookie.",
+    points: [
+      "Calls the API under /api; no client code is present here.",
+      "Must send the token cookie on every protected request.",
+      "CORS is configured as origin \"*\" with credentials, a combination browsers reject."
+    ],
+    files: "not in this repository · src/server.ts CORS config"
+  },
+  middleware: {
+    status: "Active", title: "Global middleware chain",
+    desc: "Every request crosses five global layers before routing. The limiter runs first, so even malformed requests consume quota.",
+    points: [
+      "express-rate-limit: 40 requests per IP per one-minute window.",
+      "helmet sets security headers; cors allows any origin with credentials.",
+      "express.json parses JSON bodies; cookieParser exposes req.cookies."
+    ],
+    files: "src/server.ts · src/config/RateLimiterconfig.ts"
+  },
+  routers: {
+    status: "Active", title: "Seven mounted routers · 39 routes",
+    desc: "Each domain router declares authentication and role guards per route before delegating to a controller.",
+    points: [
+      "Auth is the only router with public endpoints: register and login.",
+      "Course, lesson, quiz, question, and option reads require any signed-in user.",
+      "Enrollments is not mounted; payments and certificates have no router."
+    ],
+    files: "src/modules/*/*.router.ts"
+  },
+  controllers: {
+    status: "Active", title: "Thin controllers",
+    desc: "Controllers extract params or body fields, call one service method, and shape the JSON response.",
+    points: [
+      "Every async handler is wrapped by asyncHandler, forwarding rejections to Express.",
+      "Quiz submission takes user_id from req.user, never from the request body.",
+      "Most responses use { success, data } or { success, msg }."
+    ],
+    files: "src/modules/*/*.controller.ts · src/middlewares/asyncHandler.ts"
+  },
+  services: {
+    status: "Active", title: "Eight service classes",
+    desc: "Business logic lives in classes that construct their own Drizzle client over the shared pg Pool.",
+    points: [
+      "AuthService hashes passwords, verifies login, and manages users.",
+      "CourseService owns the Redis catalog cache branch.",
+      "QuizAttemptsService grades options in SQL results and relies on a unique constraint."
+    ],
+    files: "src/modules/*/*.service.ts"
+  },
+  orm: {
+    status: "Active", title: "Drizzle ORM",
+    desc: "Drizzle wraps node-postgres. Most modules create a local db instance from the shared pool.",
+    points: [
+      "Relational queries power the course → lesson → quiz → question → option tree.",
+      "Schema definitions live in src/db/schema.",
+      "There is no migrations folder in the repository."
+    ],
+    files: "src/db/schema/*.ts · src/config/config.ts"
+  },
+  redis: {
+    status: "Active", title: "Redis 7 cache",
+    desc: "Redis is used by exactly one path: the full course catalog read.",
+    points: [
+      "Key allCourses stores the complete nested catalog for 600 seconds.",
+      "A cache hit returns before PostgreSQL is touched.",
+      "Create, update, and delete course paths never invalidate the key."
+    ],
+    files: "src/config/redis.ts · src/modules/course/Cash/cache.service.ts"
+  },
+  postgres: {
+    status: "Active", title: "PostgreSQL 17",
+    desc: "The primary datastore holds nine tables in a named Docker volume.",
+    points: [
+      "Host port 5433 maps to container port 5432.",
+      "Ten foreign keys connect users, catalog content, payments, and attempts.",
+      "The container has a pg_isready healthcheck."
+    ],
+    files: "docker-compose.yml · src/db/schema/*.ts"
+  },
+  smtp: {
+    status: "Declared", title: "Nodemailer / SMTP",
+    desc: "Nodemailer is installed and stale compiled files exist under dist, but current source never imports it.",
+    points: [
+      "No transporter, SMTP host, or credentials exist in src.",
+      "No route sends email.",
+      "Treat email delivery as unimplemented, not merely unconfigured."
+    ],
+    files: "package.json · dist/ (stale) · no src import"
+  }
+};
+
+const mapNodes = $$(".map-node");
+function activateLayer(key, scrollIntoView = false) {
+  const data = layers[key];
+  if (!data) return;
+  mapNodes.forEach((node) => node.classList.toggle("is-active", node.dataset.layer === key));
+  $("#layer-title").textContent = data.title;
+  $("#layer-desc").textContent = data.desc;
+  const status = $("#layer-status");
+  status.textContent = data.status;
+  status.className = "tag " + (data.status === "Active" ? "tag-live" : data.status === "Declared" ? "tag-partial" : "tag-planned");
+  $("#layer-points").innerHTML = data.points.map((point) => "<li>" + point + "</li>").join("");
+  $("#layer-files").textContent = data.files;
+  if (scrollIntoView && innerWidth < 941) {
+    $(".inspector").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+}
+mapNodes.forEach((node) => {
+  const activate = () => activateLayer(node.dataset.layer, true);
+  node.addEventListener("click", activate);
+  node.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activate();
+    }
+  });
+});
+activateLayer("middleware");
+
+/* ---------------- modules ---------------- */
+const modules = {
+  auth: {
+    title: "Auth & users", service: "AuthService", status: "live", statusLabel: "Live",
+    summary: "Public registration and login, cookie-based JWT sessions, and admin-only user administration.",
+    routes: [["POST", "/api/auth/register"], ["POST", "/api/auth/login"], ["POST", "/api/auth/logout"], ["GET", "/api/auth/"], ["DELETE", "/api/auth/:id"], ["PATCH", "/api/auth/:id"]],
+    points: [
+      "Registration hashes the password with bcrypt cost 12 before insert.",
+      "Login signs an HS256 JWT containing only id and role, valid for 30 days.",
+      "The token is returned in an httpOnly, sameSite=strict cookie with a 7-day maxAge.",
+      "Logout clears the cookie but cannot revoke an already-issued JWT.",
+      "There is no GET /me endpoint; GET /api/auth/ is admin-only."
+    ],
+    note: "PATCH /api/auth/:id is student-only but uses the path id, so a student can target another user record.",
+    files: "src/modules/auth/* · src/utils/token.ts · src/utils/hashedPassword.ts"
+  },
+  courses: {
+    title: "Courses", service: "CourseService", status: "live", statusLabel: "Live",
+    summary: "Course catalog CRUD with admin ownership checks on mutation and a complete nested read.",
+    routes: [["POST", "/api/courses/"], ["GET", "/api/courses/"], ["GET", "/api/courses/:id"], ["PATCH", "/api/courses/:id"], ["DELETE", "/api/courses/:id"]],
+    points: [
+      "Only admins can create, update, or delete; any signed-in user can read.",
+      "Update and delete require both course id and the caller's admin_id.",
+      "GET /api/courses/ loads courses with lessons → quiz → questions → options.",
+      "The full response is cached as allCourses for 600 seconds.",
+      "No mutation invalidates that cache."
+    ],
+    note: "Catalog changes can remain invisible for up to ten minutes after a successful write.",
+    files: "src/modules/course/* · src/modules/course/Cash/cache.service.ts"
+  },
+  lessons: {
+    title: "Lessons", service: "LessonsService", status: "live", statusLabel: "Live",
+    summary: "Lesson metadata scoped to courses, with admin-only writes and course-based listing.",
+    routes: [["POST", "/api/lessons/"], ["GET", "/api/lessons/"], ["GET", "/api/lessons/course/:course_id"], ["GET", "/api/lessons/:id"], ["PATCH", "/api/lessons/:id"], ["DELETE", "/api/lessons/:id"]],
+    points: [
+      "Reads require authentication but do not check enrollment.",
+      "Writes are admin-only; update and delete also scope by course_id.",
+      "Rows store title, duration_sec, and course_id only.",
+      "There is no video URL, provider id, or asset metadata."
+    ],
+    note: "The product presents video courses, but the schema cannot identify or authorize a video asset.",
+    files: "src/modules/lesson/* · src/db/schema/lessons.ts"
+  },
+  quizzes: {
+    title: "Quizzes", service: "QuizzesService", status: "live", statusLabel: "Live",
+    summary: "One quiz per lesson, with CRUD and lookup by lesson.",
+    routes: [["POST", "/api/quizzes/"], ["GET", "/api/quizzes/"], ["GET", "/api/quizzes/lesson/:lesson_id"], ["GET", "/api/quizzes/:id"], ["PATCH", "/api/quizzes/:id"], ["DELETE", "/api/quizzes/:id"]],
+    points: [
+      "lesson_id carries a unique constraint, enforcing one quiz per lesson.",
+      "Any authenticated user can read every quiz.",
+      "Writes are admin-only and update/delete scope by lesson_id.",
+      "The quiz itself stores only id, lesson_id, title, and createdAt."
+    ],
+    note: "Quiz access has no enrollment or payment check, so any signed-in user can discover any quiz.",
+    files: "src/modules/quiz/* · src/db/schema/quizzes.ts"
+  },
+  questions: {
+    title: "Questions", service: "QuestionsService", status: "live", statusLabel: "Live",
+    summary: "Question prompts belonging to quizzes, with quiz-scoped CRUD and lookup.",
+    routes: [["POST", "/api/questions/"], ["GET", "/api/questions/"], ["GET", "/api/questions/quiz/:quiz_id"], ["GET", "/api/questions/:id"], ["PATCH", "/api/questions/:id"], ["DELETE", "/api/questions/:id"]],
+    points: [
+      "Questions store only question_text and quiz_id.",
+      "Any authenticated user can list questions by quiz.",
+      "Admin write routes scope update and delete by quiz_id.",
+      "Question order has no explicit position column."
+    ],
+    note: "Because question and option reads are open to any signed-in user, correct answers are discoverable before a graded attempt.",
+    files: "src/modules/question/* · src/db/schema/questions.ts"
+  },
+  options: {
+    title: "Options", service: "OptionsService", status: "live", statusLabel: "Live",
+    summary: "Answer choices with a per-question correctness flag and a standalone answer-check route.",
+    routes: [["POST", "/api/options/"], ["GET", "/api/options/"], ["POST", "/api/options/check-answer"], ["GET", "/api/options/question/:question_id"], ["GET", "/api/options/:id"], ["PATCH", "/api/options/:id"], ["DELETE", "/api/options/:id"]],
+    points: [
+      "Each option stores option_text and is_correct.",
+      "GET /api/options/ and GET /api/options/question/:id expose is_correct to any signed-in user.",
+      "check-answer returns isCorrect and correctOptionId.",
+      "Admin writes update/delete only within the supplied question_id."
+    ],
+    note: "The API exposes correct answers through ordinary read endpoints, weakening the server-side grading guarantee.",
+    files: "src/modules/option/* · src/db/schema/options.ts"
+  },
+  attempts: {
+    title: "Quiz attempts", service: "QuizAttemptsService", status: "live", statusLabel: "Live",
+    summary: "Server-graded submissions constrained to one attempt per student per quiz.",
+    routes: [["POST", "/api/quiz-attempts/"], ["GET", "/api/quiz-attempts/me"], ["GET", "/api/quiz-attempts/quiz/:quiz_id"]],
+    points: [
+      "Students must submit exactly one answer for every question.",
+      "The service loads the chosen options and counts is_correct values itself.",
+      "The score is stored; the submitted answer set is not persisted.",
+      "A unique(user_id, quiz_id) constraint enforces one attempt.",
+      "Postgres error 23505 is translated to a 409 already-attempted response."
+    ],
+    note: "Because answers are not stored and there is no re-attempt policy beyond uniqueness, the record supports only a score history.",
+    files: "src/modules/quiz_attempts/* · src/db/schema/quiz_attempts.ts"
+  },
+  enrollments: {
+    title: "Enrollments", service: "EnrollmentService", status: "partial", statusLabel: "Partial",
+    summary: "The table and a service skeleton exist, but the router and controller are empty and never mounted.",
+    routes: [],
+    points: [
+      "enrollments links one user to one course with a status enum.",
+      "unique(user_id, course_id) prevents duplicate links.",
+      "The service method only returns an echo of its input.",
+      "The router is not imported in server.ts.",
+      "No student can create or inspect an enrollment through the API."
+    ],
+    note: "This is the key missing link between auth, payments, and course access.",
+    files: "src/modules/enrollments/* · src/db/schema/Enrollments.ts · src/server.ts"
+  },
+  payments: {
+    title: "Payments", service: "No service in src", status: "schema", statusLabel: "Schema only",
+    summary: "A payment table records manual Vodafone Cash or InstaPay submissions for an enrollment.",
+    routes: [],
+    points: [
+      "Payments reference enrollments and cascade on enrollment delete.",
+      "Amount is an integer in piasters; 50000 means 500 EGP.",
+      "Method is VCASH or INSTAPAY; status is PENDING, APPROVED, or REJECTED.",
+      "Sender name, phone, transaction number, and admin note are stored.",
+      "No controller, route, provider SDK, or webhook exists in current source."
+    ],
+    note: "Stale payment code may exist under dist, but no current src module can accept or approve a payment.",
+    files: "src/db/schema/payment.ts · no src module · stale dist/"
+  },
+  certificates: {
+    title: "Certificates", service: "Not built", status: "planned", statusLabel: "Planned",
+    summary: "The README describes course-completion certificates, but no table, service, or route exists.",
+    routes: [],
+    points: [
+      "No certificate entity in the Drizzle schema.",
+      "No completion tracking beyond quiz attempts.",
+      "No PDF generation, verification id, or public certificate route.",
+      "No enrollment API from which completion could be derived."
+    ],
+    note: "Treat certificates as a product intention, not an existing capability.",
+    files: "README target only · no src implementation"
+  }
+};
+
+const moduleGrid = $("#module-grid");
+const moduleCards = $$(".module-card", moduleGrid);
+const moduleDialog = $("#module-dialog");
+let lastFocused = null;
+
+function openModule(key) {
+  const data = modules[key];
+  if (!data) return;
+  lastFocused = document.activeElement;
+  const status = $("#dialog-status");
+  status.textContent = data.statusLabel;
+  status.className = "tag " + (data.status === "live" ? "tag-live" : data.status === "partial" ? "tag-partial" : data.status === "schema" ? "tag-schema" : "tag-planned");
+  $("#dialog-title").textContent = data.title;
+  $("#dialog-service").textContent = data.service;
+  $("#dialog-summary").textContent = data.summary;
+  $("#dialog-points").innerHTML = data.points.map((point) => "<li>" + point + "</li>").join("");
+  $("#dialog-routes").innerHTML = data.routes.length
+    ? data.routes.map(([method, path]) => '<div class="route-line"><span class="method method-' + method.toLowerCase() + '">' + method + '</span><span class="route-path">' + path + "</span></div>").join("")
+    : '<div class="route-line"><span class="route-path">No mounted routes</span></div>';
+  $("#dialog-note").innerHTML = "<b>Observation</b>" + data.note;
+  $("#dialog-files").textContent = data.files;
+  moduleDialog.hidden = false;
+  document.body.classList.add("modal-open");
+  $("#dialog-close").focus();
+}
+
+function closeModule() {
+  moduleDialog.hidden = true;
+  document.body.classList.remove("modal-open");
+  if (lastFocused) lastFocused.focus();
+}
+
+moduleCards.forEach((card) => {
+  card.addEventListener("click", () => openModule(card.dataset.module));
+  card.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openModule(card.dataset.module);
+    }
+  });
+});
+$("#dialog-close").addEventListener("click", closeModule);
+moduleDialog.addEventListener("click", (event) => {
+  if (event.target === moduleDialog) closeModule();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !moduleDialog.hidden) closeModule();
+});
+
+$$(".filter-chip").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    $$(".filter-chip").forEach((other) => other.classList.toggle("is-active", other === chip));
+    const filter = chip.dataset.filter;
+    moduleCards.forEach((card) => {
+      card.classList.toggle("is-hidden", filter !== "all" && card.dataset.status !== filter);
+    });
+  });
+});
+/* ---------------- endpoint filters ---------------- */
+const endpointRows = $$("#endpoint-body tr");
+const endpointSearch = $("#endpoint-search");
+const methodFilter = $("#method-filter");
+const accessFilter = $("#access-filter");
+const endpointCount = $("#endpoint-count");
+const tableEmpty = $("#table-empty");
+
+function filterEndpoints() {
+  const query = endpointSearch.value.trim().toLowerCase();
+  const method = methodFilter.value;
+  const access = accessFilter.value;
+  let visible = 0;
+  endpointRows.forEach((row) => {
+    const haystack = ((row.dataset.search || "") + " " + row.textContent).toLowerCase();
+    const match = (method === "all" || row.dataset.method === method)
+      && (access === "all" || row.dataset.access === access)
+      && (!query || haystack.includes(query));
+    row.hidden = !match;
+    if (match) visible += 1;
+  });
+  endpointCount.textContent = visible + " of " + endpointRows.length + " routes";
+  tableEmpty.hidden = visible !== 0;
+}
+[endpointSearch, methodFilter, accessFilter].forEach((control) => {
+  control.addEventListener("input", filterEndpoints);
+  control.addEventListener("change", filterEndpoints);
+});
+$("#reset-filters").addEventListener("click", () => {
+  endpointSearch.value = "";
+  methodFilter.value = "all";
+  accessFilter.value = "all";
+  filterEndpoints();
+});
+
+/* ---------------- entity inspector ---------------- */
+const entities = {
+  users: {
+    kind: "Table · identity", desc: "Accounts for both admins and students; role is the only authorization claim carried in the JWT.",
+    columns: [["id","uuid","PK"],["name","varchar(255)",""],["email","varchar(255)","UQ"],["password","varchar(255)",""],["role","role","ENUM"],["created_at","timestamp",""],["updated_at","timestamp",""]],
+    relations: "<b>courses.admin_id</b> → users.id · <b>enrollments.user_id</b> → users.id · quiz attempts reference users",
+    note: "Password stores a bcrypt hash. Role defaults to student and is constrained to admin or student."
+  },
+  courses: {
+    kind: "Table · catalog root", desc: "A priced course owned by an admin. The root of the lesson, quiz, question, and option tree.",
+    columns: [["id","uuid","PK"],["title","varchar(255)",""],["price","integer",""],["admin_id","uuid","FK"],["created_at","timestamp",""],["updated_at","timestamp",""]],
+    relations: "<b>admin_id</b> → users.id · referenced by <b>lessons.course_id</b> and <b>enrollments.course_id</b>",
+    note: "Price is an integer; unlike payments, the unit is not documented in the schema."
+  },
+  lessons: {
+    kind: "Table · catalog", desc: "Ordered content under a course. It stores duration but no playback asset.",
+    columns: [["id","uuid","PK"],["course_id","uuid","FK"],["title","varchar(255)",""],["duration_sec","integer",""],["created_at","timestamp",""]],
+    relations: "<b>course_id</b> → courses.id · one <b>quiz</b> may reference this lesson",
+    note: "There is no position column, video URL, provider id, or signed playback policy."
+  },
+  quizzes: {
+    kind: "Table · assessment", desc: "Exactly one quiz can belong to a lesson; questions and attempts hang below it.",
+    columns: [["id","uuid","PK"],["lesson_id","uuid","FK/UQ"],["title","varchar(255)",""],["created_at","timestamp",""]],
+    relations: "<b>lesson_id</b> → lessons.id · one-to-many <b>questions</b> · one-to-many <b>quiz_attempts</b>",
+    note: "The unique constraint on lesson_id enforces the one-quiz-per-lesson rule at the database level."
+  },
+  questions: {
+    kind: "Table · assessment", desc: "A prompt inside a quiz. Options carry the answer choices and correctness.",
+    columns: [["id","uuid","PK"],["quiz_id","uuid","FK"],["question_text","varchar(500)",""],["created_at","timestamp",""]],
+    relations: "<b>quiz_id</b> → quizzes.id · one-to-many <b>options</b>",
+    note: "No ordering field exists, so question sequence depends on database return order."
+  },
+  options: {
+    kind: "Table · assessment", desc: "An answer choice with an is_correct flag used by server-side grading.",
+    columns: [["id","uuid","PK"],["question_id","uuid","FK"],["option_text","varchar(500)",""],["is_correct","boolean",""],["created_at","timestamp",""]],
+    relations: "<b>question_id</b> → questions.id · choices are counted by QuizAttemptsService",
+    note: "The flag is readable through ordinary API reads, so correctness is not a server-only secret."
+  },
+  enrollments: {
+    kind: "Table · access", desc: "Links a user to a course with a lifecycle status. The API layer around it is empty.",
+    columns: [["id","uuid","PK"],["user_id","uuid","FK"],["course_id","uuid","FK"],["status","enrollment_status","ENUM"],["created_at","timestamp",""]],
+    relations: "<b>user_id</b> → users.id (cascade) · <b>course_id</b> → courses.id (cascade) · one-to-many <b>payments</b>",
+    note: "unique(user_id, course_id) stops duplicates; index on course_id. Status defaults to PENDING (PENDING, APPROVED, SUSPENDED)."
+  },
+  payments: {
+    kind: "Table · money", desc: "A manual payment claim attached to an enrollment, awaiting admin review.",
+    columns: [["id","uuid","PK"],["enrollment_id","uuid","FK"],["amount","integer",""],["method","payment_method","ENUM"],["sender_name","varchar(150)",""],["sender_phone","varchar(30)",""],["transaction_number","varchar(100)",""],["status","payment_status","ENUM"],["admin_note","varchar(500)",""],["created_at","timestamp",""]],
+    relations: "<b>enrollment_id</b> → enrollments.id (cascade) · indexed by enrollment and status",
+    note: "Amount is in piasters (50000 = 500 EGP). Methods: VCASH, INSTAPAY. Statuses: PENDING, APPROVED, REJECTED."
+  },
+  attempts: {
+    kind: "Table · assessment", desc: "One graded submission per user and quiz. Only the numeric score is retained.",
+    columns: [["id","uuid","PK"],["user_id","uuid","FK"],["quiz_id","uuid","FK"],["score","integer",""],["attempted_at","timestamp",""]],
+    relations: "<b>user_id</b> → users.id (cascade) · <b>quiz_id</b> → quizzes.id (cascade)",
+    note: "unique(user_id, quiz_id) enforces a single attempt. Submitted answers are validated but not stored."
+  }
+};
+
+const entityNodes = $$(".entity-node");
+let activeEntity = "users";
+function activateEntity(key) {
+  const data = entities[key];
+  if (!data) return;
+  activeEntity = key;
+  entityNodes.forEach((node) => node.classList.toggle("is-active", node.dataset.entity === key));
+  $("#entity-kind").textContent = data.kind;
+  $("#entity-title").textContent = key === "attempts" ? "quiz_attempts" : key;
+  $("#entity-desc").textContent = data.desc;
+  $("#entity-columns").innerHTML = data.columns.map(([name, type, flag]) => (
+    '<div class="column-row"><span class="column-name">' + name + '</span><span class="column-type">' + type + '</span><span class="column-flag flag-' + (flag || "PK") + '">' + (flag || "") + "</span></div>"
+  )).join("");
+  $("#entity-relations").innerHTML = data.relations;
+  $("#entity-note").textContent = data.note;
+}
+entityNodes.forEach((node) => {
+  const activate = () => activateEntity(node.dataset.entity);
+  node.addEventListener("click", activate);
+  node.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activate();
+    }
+  });
+});
+activateEntity("users");
+
+/* ---------------- auth sequences ---------------- */
+const flows = {
+  login: {
+    kicker: "POST /api/auth/login", title: "Credentials become a cookie",
+    desc: "The service compares the submitted password with the stored bcrypt hash, signs a JWT, and returns it in a strict httpOnly cookie.",
+    participants: [["Client","browser"],["Express","router"],["AuthService","domain"],["Postgres","users"]],
+    arrows: [
+      [0,1,92,"POST /api/auth/login","email + password"],
+      [1,2,138,"login(dto)","controller delegates"],
+      [2,3,184,"SELECT by email","Drizzle query"],
+      [3,2,230,"user row","includes bcrypt hash",true],
+      [2,1,276,"signToken + set cookie","30d JWT · 7d cookie"],
+      [1,0,322,"200 success","cookie set, no token in body",true]
+    ],
+    steps: [
+      ["Validate input","Email and password arrive through express.json into the AuthController."],
+      ["Find the account","AuthService selects by email and compares the supplied password with the bcrypt hash."],
+      ["Sign the token","Only id and role are signed with HS256 for a 30-day lifetime."],
+      ["Set the cookie","Express writes token as httpOnly, sameSite=strict, path=/, maxAge 7 days."],
+      ["Return","The body reports success only; the token lives in the cookie."]
+    ]
+  },
+  register: {
+    kicker: "POST /api/auth/register", title: "A user is hashed and inserted",
+    desc: "Registration accepts name, email, password, and role, hashes the password, then inserts the user. It does not log the user in.",
+    participants: [["Client","browser"],["Express","router"],["AuthService","domain"],["Postgres","users"]],
+    arrows: [
+      [0,1,92,"POST /api/auth/register","name · email · password · role"],
+      [1,2,138,"addUser(body)","controller delegates"],
+      [2,3,184,"INSERT users","bcrypt hash first"],
+      [3,2,230,"created row","or 23505 unique violation",true],
+      [2,1,276,"201 success","no cookie is issued",true]
+    ],
+    steps: [
+      ["Receive the payload","The controller passes the request body straight to AuthService.addUser."],
+      ["Hash the password","bcrypt cost 12 replaces the plain password before insert."],
+      ["Insert","Drizzle inserts into users and returns the created row."],
+      ["Handle collisions","The unique email constraint may raise Postgres 23505."],
+      ["Respond","The API reports success and tells the user to log in."]
+    ]
+  },
+  guard: {
+    kicker: "Any protected route · GET /api/courses", title: "The cookie is the credential",
+    desc: "Authenticate verifies the JWT from req.cookies.token, attaches id and role, and authorize checks the role list before the controller runs.",
+    participants: [["Client","cookie jar"],["Express","router"],["authenticate","middleware"],["CourseService","domain"],["Redis","cache"]],
+    arrows: [
+      [0,1,92,"GET /api/courses/","token cookie attached"],
+      [1,2,138,"authenticate(req)","read req.cookies.token"],
+      [2,1,184,"req.user = {id, role}","valid signature",true],
+      [1,3,230,"getAllCourses()","controller delegates"],
+      [3,4,276,"GET allCourses","cache-first read"],
+      [3,1,322,"catalog","cache hit or PostgreSQL load",true]
+    ],
+    steps: [
+      ["Cookie extraction","authenticate reads token directly from the parsed cookie jar."],
+      ["Signature check","verifyToken enforces HS256 and the shared JWT_SECRET."],
+      ["Role gate","authorize compares req.user.role with its allowed role list."],
+      ["Domain call","The controller invokes the service after both guards pass."],
+      ["Catalog read","CourseService checks Redis before querying PostgreSQL."]
+    ]
+  },
+  logout: {
+    kicker: "POST /api/auth/logout", title: "The cookie is cleared, not revoked",
+    desc: "Logout requires a valid token, then clears the browser cookie. The token itself remains valid until its 30-day expiry.",
+    participants: [["Client","browser"],["Express","router"],["authenticate","middleware"],["AuthService","no-op"]],
+    arrows: [
+      [0,1,92,"POST /api/auth/logout","current cookie"],
+      [1,2,138,"authenticate(req)","other routes need this too"],
+      [2,1,184,"req.user","valid signature",true],
+      [1,3,230,"logout()","controller"],
+      [3,1,276,"clearCookie(\"token\")","response helper",true],
+      [1,0,322,"200 success","browser copy removed",true]
+    ],
+    steps: [
+      ["Authenticate","Logout is not public; a valid cookie is required to reach it."],
+      ["Delegate","The controller calls AuthService.logout."],
+      ["Clear","Express invokes clearCookie for token."],
+      ["Respond","The client is told the logout succeeded."],
+      ["Residual risk","Any copied JWT remains cryptographically valid for its full 30-day lifetime."]
+    ]
+  }
+};
+
+function drawFlow(key) {
+  const flow = flows[key];
+  if (!flow) return;
+  $$(".flow-tab").forEach((tab) => {
+    const active = tab.dataset.flow === key;
+    tab.classList.toggle("is-active", active);
+    tab.setAttribute("aria-selected", String(active));
+  });
+  $("#flow-kicker").textContent = flow.kicker;
+  $("#flow-title").textContent = flow.title;
+  $("#flow-desc").textContent = flow.desc;
+  $("#auth-steps").innerHTML = flow.steps.map(([title, text], index) => (
+    '<li><button class="step-btn' + (index === 0 ? " is-active" : "") + '" type="button"><span class="step-num">' + String(index + 1).padStart(2, "0") + '</span><span><strong>' + title + "</strong><br><span style=\"color:var(--faint);font-size:11px\">" + text + "</span></span></button></li>"
+  )).join("");
+
+  const count = flow.participants.length;
+  const gap = 730 / (count - 1 || 1);
+  const xs = flow.participants.map((_, index) => Math.round(85 + gap * index));
+  const svg = $("#auth-diagram");
+  const defs = '<defs><marker id="seq-head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="var(--cyan)"></path></marker></defs>';
+  const heads = flow.participants.map(([label, sub], index) => {
+    const x = xs[index];
+    return '<g class="seq-participant"><rect x="' + (x - 70) + '" y="16" width="140" height="42" rx="8"></rect>'
+      + '<text x="' + x + '" y="35" text-anchor="middle">' + label + '</text>'
+      + '<text class="seq-sub" x="' + x + '" y="49" text-anchor="middle">' + sub + '</text></g>'
+      + '<line class="seq-lifeline" x1="' + x + '" y1="58" x2="' + x + '" y2="360"></line>';
+  }).join("");
+  const arrows = flow.arrows.map(([from, to, y, label, sub, dashed], index) => {
+    const x1 = xs[from];
+    const x2 = xs[to];
+    const direction = x2 >= x1 ? 1 : -1;
+    const start = x1 + direction * 8;
+    const end = x2 - direction * 8;
+    const mid = (x1 + x2) / 2;
+    return '<g class="seq-arrow' + (dashed ? " dashed" : "") + (index === flow.arrows.length - 1 ? " is-hot" : "") + '">'
+      + '<line x1="' + start + '" y1="' + y + '" x2="' + end + '" y2="' + y + '" marker-end="url(#seq-head)"></line>'
+      + '<text x="' + mid + '" y="' + (y - 6) + '" text-anchor="middle">' + label + '</text>'
+      + '<text class="seq-sub" x="' + mid + '" y="' + (y + 13) + '" text-anchor="middle">' + sub + '</text></g>';
+  }).join("");
+  svg.innerHTML = defs + heads + arrows;
+}
+$$(".flow-tab").forEach((tab) => tab.addEventListener("click", () => drawFlow(tab.dataset.flow)));
+$$("#auth-steps").forEach((list) => list.addEventListener("click", (event) => {
+  const button = event.target.closest(".step-btn");
+  if (!button) return;
+  $$(".step-btn", list).forEach((item) => item.classList.toggle("is-active", item === button));
+}));
+drawFlow("login");
+
+/* ---------------- lifecycle ---------------- */
+const stages = [
+  {
+    n: "01", label: "Socket accepted", title: "Socket accepted",
+    desc: "Node's HTTP server accepts the connection and hands the request to the Express app.",
+    code: "app.listen(4000)",
+    points: ["The API listens on a hard-coded port 4000.", "No graceful shutdown hook is registered."],
+    files: "src/server.ts"
+  },
+  {
+    n: "02", label: "Rate limit", title: "Rate-limit gate",
+    desc: "The per-IP limiter counts the request before helmet, CORS, or body parsing run.",
+    code: "app.use(apiRequestLimiter) · 40 req/min",
+    points: ["Exceeding the quota returns a 429 JSON payload.", "The limiter is global, not route-specific."],
+    files: "src/config/RateLimiterconfig.ts · server.ts"
+  },
+  {
+    n: "03", label: "Parse & secure", title: "Headers, CORS, and parsing",
+    desc: "helmet adds security headers, cors sets cross-origin policy, express.json parses bodies, and cookieParser exposes cookies.",
+    code: "helmet → cors → express.json() → cookieParser()",
+    points: ["CORS uses origin \"*\" together with credentials: true.", "JSON body parsing has no explicit size limit override."],
+    files: "src/server.ts"
+  },
+  {
+    n: "04", label: "Route match", title: "Router selection",
+    desc: "Express matches the /api prefix and picks one of the seven mounted routers, then a route within it.",
+    code: "app.use(\"/api/courses\", courseRouter)",
+    points: ["Unmatched requests fall through to a 404 AppError.", "Static segments are registered before /:id parameters."],
+    files: "src/server.ts · src/modules/*/*.router.ts"
+  },
+  {
+    n: "05", label: "Auth guard", title: "Cookie verification and role check",
+    desc: "Authenticate verifies the JWT signature and expiry, attaches req.user, and authorize checks the allowed roles.",
+    code: "authenticate → authorize(\"admin\" | \"student\")",
+    points: ["A missing token is a 401; a wrong role is a 403.", "No database lookup happens during authentication."],
+    files: "src/middlewares/auth.ts · src/utils/token.ts"
+  },
+  {
+    n: "06", label: "Controller", title: "Controller dispatch",
+    desc: "The route handler extracts ids or body fields and delegates to a service method. asyncHandler forwards rejections.",
+    code: "asyncHandler(async (req, res) => { … })",
+    points: ["Controllers stay thin and do not query the database directly.", "Responses are shaped here, not in services."],
+    files: "src/modules/*/*.controller.ts · src/middlewares/asyncHandler.ts"
+  },
+  {
+    n: "07", label: "Service", title: "Business logic",
+    desc: "The domain service applies ownership rules, hashing, grading, or cache policy before touching the database.",
+    code: "new CourseService() · new QuizAttemptsService()",
+    points: ["Services instantiate their own Drizzle client over the shared pool.", "Auth, grading, and cache policy live at this layer."],
+    files: "src/modules/*/*.service.ts"
+  },
+  {
+    n: "08", label: "Data access", title: "Drizzle query construction",
+    desc: "Drizzle builds SQL from the typed schema and passes it to node-postgres over the shared connection pool.",
+    code: "drizzle({ client: pool, schema })",
+    points: ["Relational queries use the relations declared in src/db/schema.", "No migrations are present in the repository."],
+    files: "src/db/schema/*.ts · src/config/config.ts"
+  },
+  {
+    n: "09", label: "Cache / DB", title: "Redis first, PostgreSQL on miss",
+    desc: "For the catalog read, Redis is checked before PostgreSQL. Other routes go straight to the database.",
+    code: "cacheService.get(\"allCourses\") → db.query.courses.findMany()",
+    points: ["A Redis hit avoids the database entirely.", "A miss loads the nested catalog and writes it for 600 seconds.", "Course writes never clear the cached value."],
+    files: "src/modules/course/Cash/cache.service.ts · src/config/redis.ts"
+  },
+  {
+    n: "10", label: "Response", title: "JSON response or mapped error",
+    desc: "The controller serializes the result. Rejections reach the central error handler, which maps known Postgres codes.",
+    code: "res.status(200).json({ success: true, data })",
+    points: ["PG 23505 maps to 409 \"Email already exists\".", "PG 23503 maps to 409; 23502 and 22P02 map to 400.", "Unknown errors become a generic 500 and are logged."],
+    files: "src/middlewares/errorHandler.ts · src/errors/AppError.ts"
+  }
+];
+
+let stageIndex = 0;
+let traceTimer = null;
+const stageRail = $("#stage-rail");
+stageRail.innerHTML = stages.map((stage, index) => (
+  '<button class="stage-btn' + (index === 0 ? " is-active" : "") + '" type="button" role="tab" aria-selected="' + (index === 0) + '" data-stage="' + index + '"><span class="stage-n">' + stage.n + "</span>" + stage.label + "</button>"
+)).join("");
+
+function showStage(index) {
+  stageIndex = index;
+  const stage = stages[index];
+  $$(".stage-btn", stageRail).forEach((button) => {
+    const active = Number(button.dataset.stage) === index;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  $("#stage-badge").textContent = stage.n + " / 10";
+  $("#stage-title").textContent = stage.title;
+  $("#stage-desc").textContent = stage.desc;
+  $("#stage-code").innerHTML = "<code>" + stage.code + "</code>";
+  $("#stage-points").innerHTML = stage.points.map((point) => "<li>" + point + "</li>").join("");
+  $("#stage-files").textContent = stage.files;
+}
+
+function stopTrace() {
+  if (traceTimer) {
+    clearInterval(traceTimer);
+    traceTimer = null;
+  }
+  $("#trace-toggle").textContent = "Play trace";
+}
+
+stageRail.addEventListener("click", (event) => {
+  const button = event.target.closest(".stage-btn");
+  if (!button) return;
+  stopTrace();
+  showStage(Number(button.dataset.stage));
+});
+
+$("#trace-toggle").addEventListener("click", () => {
+  if (traceTimer) {
+    stopTrace();
+    return;
+  }
+  let next = 0;
+  showStage(0);
+  $("#trace-toggle").textContent = "Pause trace";
+  traceTimer = setInterval(() => {
+    next += 1;
+    if (next >= stages.length) {
+      stopTrace();
+      return;
+    }
+    showStage(next);
+    const active = $(".stage-btn.is-active", stageRail);
+    if (active) active.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  }, 950);
+});
+
+showStage(0);
+filterEndpoints();
+
+</script>
+
+
+
+</body>
+</html>
