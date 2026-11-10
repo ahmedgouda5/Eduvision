@@ -2,6 +2,7 @@ export * from "./courses.js";
 export * from "./Enrollments.js";
 export * from "./lessons.js";
 export * from "./options.js";
+export * from "./payment.js";
 export * from "./questions.js";
 export * from "./quizzes.js";
 export * from "./users.js";

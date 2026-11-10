@@ -30,7 +30,6 @@ export const payments = pgTable(
       .notNull()
       .references(() => enrollments.id, { onDelete: "cascade" }),
 
-    // القيمة بالقروش: 50000 = 500 جنيه.
     amount: integer("amount").notNull(),
 
     method: paymentMethodEnum("method").notNull(),
@@ -42,8 +41,6 @@ export const payments = pgTable(
     }).notNull(),
 
     status: paymentStatusEnum("status").notNull().default("PENDING"),
-
-    adminNote: varchar("admin_note", { length: 500 }),
 
     createdAt: timestamp("created_at", {
       withTimezone: true,
