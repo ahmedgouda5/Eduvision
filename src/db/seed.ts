@@ -39,18 +39,103 @@ async function seed() {
   if (!adminUser) throw new Error("Could not create or find admin user");
   console.log(`✅ Admin: ${adminUser.id}`);
 
-  // ─── 2. Course ────────────────────────────────────────────────────────────
-  const [course] = await db
-    .insert(schema.courses)
+  // ─── 2. Student user (needed for enrollment + payment) ────────────────────
+  const [student] = await db
+    .insert(schema.users)
     .values({
-      title: "Introduction to TypeScript",
-      price: 199,
-      admin_id: adminUser.id,
+      name: "Student Seeder",
+      email: "student@eduvision.dev",
+      password: "hashed_placeholder", // not a real login — just for FK
+      role: "student",
     })
+    .onConflictDoNothing()
     .returning();
-  console.log(`✅ Course: "${course.title}" → ${course.id}`);
 
-  // ─── 3. Lesson ────────────────────────────────────────────────────────────
+  const studentUser =
+    student ??
+    (await db.query.users.findFirst({
+      where: (u, { eq }) => eq(u.email, "student@eduvision.dev"),
+    }));
+
+  if (!studentUser) throw new Error("Could not create or find student user");
+  console.log(
+    `${student ? "✅ Student created" : "♻️ Student reused"}: ${studentUser.id}`,
+  );
+
+  // ─── 3. Course ────────────────────────────────────────────────────────────
+  const courseTitle = "Introduction to TypeScript";
+  const coursePrice = 199;
+
+  let course = await db.query.courses.findFirst({
+    where: (c, { and, eq }) =>
+      and(eq(c.title, courseTitle), eq(c.admin_id, adminUser.id)),
+    orderBy: (c, { asc }) => [asc(c.createdAt)],
+  });
+
+  const courseCreated = !course;
+
+  if (!course) {
+    [course] = await db
+      .insert(schema.courses)
+      .values({
+        title: courseTitle,
+        price: coursePrice,
+        admin_id: adminUser.id,
+      })
+      .returning();
+  }
+  console.log(
+    `${courseCreated ? "✅ Course created" : "♻️ Course reused"}: "${course.title}" → ${course.id}`,
+  );
+
+  // ─── 4. Enrollment ────────────────────────────────────────────────────────
+  let enrollment = await db.query.enrollments.findFirst({
+    where: (e, { and, eq }) =>
+      and(
+        eq(e.userId, studentUser.id),
+        eq(e.courseId, course.id),
+      ),
+  });
+
+  const enrollmentCreated = !enrollment;
+
+  if (!enrollment) {
+    [enrollment] = await db
+      .insert(schema.enrollments)
+      .values({ userId: studentUser.id, courseId: course.id })
+      .returning();
+  }
+  console.log(
+    `${enrollmentCreated ? "✅ Enrollment created" : "♻️ Enrollment reused"}: ${enrollment.id}`,
+  );
+
+  // ─── 5. Payment ───────────────────────────────────────────────────────────
+  const seedTransactionNumber = "SEED-TXN-0001";
+
+  let payment = await db.query.payments.findFirst({
+    where: (p, { eq }) => eq(p.transactionNumber, seedTransactionNumber),
+  });
+
+  const paymentCreated = !payment;
+
+  if (!payment) {
+    [payment] = await db
+      .insert(schema.payments)
+      .values({
+        enrollmentId: enrollment.id,
+        amount: course.price,
+        method: "VCASH",
+        senderName: studentUser.name,
+        senderPhone: "01000000000",
+        transactionNumber: seedTransactionNumber,
+      })
+      .returning();
+  }
+  console.log(
+    `${paymentCreated ? "✅ Payment created" : "♻️ Payment reused"}: ${payment.id}`,
+  );
+
+  // ─── 6. Lesson ────────────────────────────────────────────────────────────
   const [lesson] = await db
     .insert(schema.lessons)
     .values({
@@ -61,7 +146,7 @@ async function seed() {
     .returning();
   console.log(`✅ Lesson: "${lesson.title}" → ${lesson.id}`);
 
-  // ─── 4. Quiz ──────────────────────────────────────────────────────────────
+  // ─── 7. Quiz ──────────────────────────────────────────────────────────────
   const [quiz] = await db
     .insert(schema.quizzes)
     .values({
@@ -71,7 +156,7 @@ async function seed() {
     .returning();
   console.log(`✅ Quiz: "${quiz.title}" → ${quiz.id}\n`);
 
-  // ─── 5. Questions + Options ───────────────────────────────────────────────
+  // ─── 8. Questions + Options ───────────────────────────────────────────────
   const questionsData = [
     {
       question_text:
@@ -194,9 +279,12 @@ async function seed() {
 
   console.log(`\n✅ Seeded 10 questions with 4 options each.`);
   console.log(`\n📋 Summary:`);
-  console.log(`   Quiz ID     : ${quiz.id}`);
-  console.log(`   Lesson ID   : ${lesson.id}`);
-  console.log(`   Course ID   : ${course.id}`);
+  console.log(`   Quiz ID      : ${quiz.id}`);
+  console.log(`   Lesson ID    : ${lesson.id}`);
+  console.log(`   Course ID    : ${course.id}`);
+  console.log(`   Enrollment ID: ${enrollment.id}`);
+  console.log(`   Payment ID   : ${payment.id}`);
+  console.log(`   Student ID   : ${studentUser.id}`);
   console.log(`\n🌱 Seed complete!`);
 
   await pool.end();

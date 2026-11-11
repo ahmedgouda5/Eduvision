@@ -4,6 +4,7 @@ import {
   pgEnum,
   pgTable,
   timestamp,
+  unique,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -51,6 +52,7 @@ export const payments = pgTable(
   (table) => [
     index("payments_enrollment_id_idx").on(table.enrollmentId),
     index("payments_status_idx").on(table.status),
+    unique("payments_transaction_number_unique").on(table.transactionNumber),
   ],
 );
 
