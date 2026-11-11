@@ -449,7 +449,7 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
       <a href="#gaps">Gaps</a>
     </nav>
     <div class="top-actions">
-      <span class="live-pill"><span class="pulse-dot"></span>39 live routes</span>
+      <span class="live-pill"><span class="pulse-dot"></span>44 live routes</span>
       <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 7 7 0 0 0 20 14.5z"/></svg>
@@ -471,17 +471,17 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
         <a class="btn-quiet" href="#gaps">See the reality check</a>
       </div>
       <div class="hero-meta">
-        <span>Analyzed 09 Nov 2026</span>
-        <span>src/ · commit a097702</span>
+        <span>Analyzed 11 Nov 2026</span>
+        <span>src/ · commit d97b060</span>
         <span>No source files modified</span>
       </div>
     </div>
     <div class="overview-side reveal">
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-num">39<span>.</span></div><div class="stat-label">live endpoints</div></div>
+        <div class="stat-card"><div class="stat-num">44<span>.</span></div><div class="stat-label">live endpoints</div></div>
         <div class="stat-card"><div class="stat-num">9<span>.</span></div><div class="stat-label">tables in Drizzle</div></div>
-        <div class="stat-card"><div class="stat-num">7<span>.</span></div><div class="stat-label">mounted routers</div></div>
-        <div class="stat-card"><div class="stat-num">8<span>.</span></div><div class="stat-label">service classes</div></div>
+        <div class="stat-card"><div class="stat-num">9<span>.</span></div><div class="stat-label">mounted routers</div></div>
+        <div class="stat-card"><div class="stat-num">9<span>.</span></div><div class="stat-label">service classes</div></div>
       </div>
       <div class="tech-rail" aria-label="Technology stack">
         <span class="tech-pill">Express 5.2</span>
@@ -502,7 +502,7 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
         <div class="eyebrow">01 · System architecture</div>
         <h2>One Express process, two backing services</h2>
       </div>
-      <p class="section-note">Traffic enters a single API container, crosses a fixed middleware chain, fans out through seven routers, and reaches PostgreSQL through Drizzle. Redis is only used to cache the course catalog.</p>
+      <p class="section-note">Traffic enters a single API container, crosses a fixed middleware chain, fans out through nine routers, and reaches PostgreSQL through Drizzle. Redis is only used to cache the course catalog.</p>
     </header>
     <div class="map-layout reveal">
       <div class="panel diagram-panel">
@@ -557,13 +557,13 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
 
             <path class="map-arrow" d="M555 212 V228"></path>
             <g class="map-node" data-layer="routers" tabindex="0" role="button" aria-label="Inspect routers layer" style="--accent: var(--mint)">
-              <title>Routers — seven mounted API surfaces</title>
+              <title>Routers — nine mounted API surfaces</title>
               <rect class="node-body" x="305" y="228" width="500" height="70" rx="12"></rect>
               <rect class="node-rail" x="305" y="228" width="5" height="70" rx="2.5"></rect>
               <circle class="node-dot" cx="785" cy="246" r="3"></circle>
               <text class="node-title" x="324" y="252">ROUTER FAN-OUT</text>
-              <text class="node-sub" x="324" y="271">/api/auth · courses · lessons · quizzes</text>
-              <text class="node-mono" x="324" y="286">questions · options · quiz-attempts · 7 mounted</text>
+              <text class="node-sub" x="324" y="271">/api/auth · courses · lessons · quizzes · questions</text>
+              <text class="node-mono" x="324" y="286">options · quiz-attempts · enrollments · payments · 9 mounted</text>
             </g>
 
             <path class="map-arrow" d="M555 298 V314"></path>
@@ -584,8 +584,8 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
               <rect class="node-rail" x="305" y="400" width="5" height="70" rx="2.5"></rect>
               <circle class="node-dot" cx="785" cy="418" r="3"></circle>
               <text class="node-title" x="324" y="424">SERVICE LAYER</text>
-              <text class="node-sub" x="324" y="443">8 classes · one per domain · business rules</text>
-              <text class="node-mono" x="324" y="458">Drizzle queries · CourseService cache branch</text>
+              <text class="node-sub" x="324" y="443">9 classes · one per domain · business rules</text>
+              <text class="node-mono" x="324" y="458">Drizzle queries · CourseService cache · payment approval transaction</text>
             </g>
 
             <path class="map-arrow" d="M555 470 V486"></path>
@@ -664,8 +664,8 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
     </div>
     <div class="fact-strip reveal">
       <div class="fact"><b>40 / min</b><span>rate limit per IP</span></div>
-      <div class="fact"><b>7 → 39</b><span>routers → endpoints</span></div>
-      <div class="fact"><b>8 classes</b><span>domain services</span></div>
+      <div class="fact"><b>9 → 44</b><span>routers → endpoints</span></div>
+      <div class="fact"><b>9 classes</b><span>domain services</span></div>
       <div class="fact"><b>2 stores</b><span>Postgres + Redis</span></div>
     </div>
   </section>
@@ -674,15 +674,13 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
     <header class="section-head reveal">
       <div>
         <div class="eyebrow">02 · Modules &amp; responsibilities</div>
-        <h2>Seven live domains, three not-yet-wired surfaces</h2>
+        <h2>Nine live domains, one planned surface</h2>
       </div>
       <p class="section-note">Every live module follows router → controller → service. Only auth exposes public routes; the rest sit behind the cookie guard. Click any card for its actual routes and observations.</p>
     </header>
     <div class="filter-row reveal" role="group" aria-label="Filter modules by status">
       <button class="filter-chip is-active" type="button" data-filter="all">All <span>10</span></button>
-      <button class="filter-chip" type="button" data-filter="live">Live <span>7</span></button>
-      <button class="filter-chip" type="button" data-filter="partial">Partial <span>1</span></button>
-      <button class="filter-chip" type="button" data-filter="schema">Schema only <span>1</span></button>
+      <button class="filter-chip" type="button" data-filter="live">Live <span>9</span></button>
       <button class="filter-chip" type="button" data-filter="planned">Planned <span>1</span></button>
     </div>
     <div class="module-grid reveal" id="module-grid">
@@ -756,25 +754,25 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
         <p>Server-graded submissions with a one-attempt-per-user rule.</p>
         <div class="module-foot"><span>3 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
       </article>
-      <article class="module-card accent-amber" data-module="enrollments" data-status="partial" tabindex="0" role="button" aria-haspopup="dialog">
+      <article class="module-card accent-amber" data-module="enrollments" data-status="live" tabindex="0" role="button" aria-haspopup="dialog">
         <div class="module-top">
           <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v10H4z"/><path d="M9 7V5h6v2M4 11h16"/></svg></span>
-          <span class="tag tag-partial">Partial</span>
+          <span class="tag tag-live">Live</span>
         </div>
         <h3>Enrollments</h3>
         <div class="module-service">EnrollmentService</div>
-        <p>Schema and service skeleton for linking a student to a course; not mounted.</p>
-        <div class="module-foot"><span>0 mounted routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+        <p>Student enrollment creation with course and duplicate checks, plus an admin listing.</p>
+        <div class="module-foot"><span>2 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
       </article>
-      <article class="module-card accent-violet" data-module="payments" data-status="schema" tabindex="0" role="button" aria-haspopup="dialog">
+      <article class="module-card accent-violet" data-module="payments" data-status="live" tabindex="0" role="button" aria-haspopup="dialog">
         <div class="module-top">
           <span class="module-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span>
-          <span class="tag tag-schema">Schema only</span>
+          <span class="tag tag-live">Live</span>
         </div>
         <h3>Payments</h3>
-        <div class="module-service">No service in src</div>
-        <p>Payment records tied to an enrollment, with manual Vodafone Cash / InstaPay metadata.</p>
-        <div class="module-foot"><span>0 mounted routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+        <div class="module-service">PaymentService</div>
+        <p>Manual VCash / InstaPay submissions with server-derived pricing and admin approval.</p>
+        <div class="module-foot"><span>3 routes</span><span class="module-open">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
       </article>
       <article class="module-card accent-rose" data-module="certificates" data-status="planned" tabindex="0" role="button" aria-haspopup="dialog">
         <div class="module-top">
@@ -792,7 +790,7 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
     <header class="section-head reveal">
       <div>
         <div class="eyebrow">03 · API surface</div>
-        <h2>All 39 routes, one cookie, two roles</h2>
+        <h2>All 44 routes, one cookie, two roles</h2>
       </div>
       <p class="section-note">Only registration and login are public. Every other route requires the signed <code>token</code> cookie; mutations are admin-only except quiz submission and the student profile patch.</p>
     </header>
@@ -817,7 +815,7 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
           <option value="admin">Admin only</option>
         </select>
         <button class="btn-quiet small" id="reset-filters" type="button">Reset</button>
-        <span class="result-count" id="endpoint-count">39 of 39 routes</span>
+        <span class="result-count" id="endpoint-count">44 of 44 routes</span>
       </div>
       <div class="table-scroll">
         <table class="endpoint-table">
@@ -942,6 +940,21 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
             <tr data-method="GET" data-access="admin" data-search="attempts by quiz quiz_id admin results">
               <td><span class="method method-get">GET</span></td><td><code>/api/quiz-attempts/quiz/:quiz_id</code></td><td><span class="access access-admin">Admin</span></td><td>QuizAttemptsService</td><td>Return all attempts for one quiz.</td>
             </tr>
+            <tr data-method="POST" data-access="student" data-search="enrollments create enroll student course">
+              <td><span class="method method-post">POST</span></td><td><code>/api/enrollments/</code></td><td><span class="access access-student">Student</span></td><td>EnrollmentService</td><td>Create a PENDING enrollment after checking the course and duplicates.</td>
+            </tr>
+            <tr data-method="GET" data-access="admin" data-search="enrollments list all admin">
+              <td><span class="method method-get">GET</span></td><td><code>/api/enrollments/</code></td><td><span class="access access-admin">Admin</span></td><td>EnrollmentService</td><td>List every enrollment.</td>
+            </tr>
+            <tr data-method="POST" data-access="student" data-search="payments create submit vcash instapay student transaction">
+              <td><span class="method method-post">POST</span></td><td><code>/api/payments/</code></td><td><span class="access access-student">Student</span></td><td>PaymentService</td><td>Submit a manual payment; amount is derived from the course price.</td>
+            </tr>
+            <tr data-method="GET" data-access="admin" data-search="payments list all admin review">
+              <td><span class="method method-get">GET</span></td><td><code>/api/payments/</code></td><td><span class="access access-admin">Admin</span></td><td>PaymentService</td><td>List every payment submission.</td>
+            </tr>
+            <tr data-method="PATCH" data-access="admin" data-search="payments approve admin review transaction">
+              <td><span class="method method-patch">PATCH</span></td><td><code>/api/payments/:id/approve</code></td><td><span class="access access-admin">Admin</span></td><td>PaymentService</td><td>Approve the payment and its enrollment in one transaction.</td>
+            </tr>
           </tbody>
         </table>
         <div class="table-empty" id="table-empty" hidden>No routes match those filters.</div>
@@ -1038,14 +1051,14 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
               <rect class="entity-bar" width="4" height="68" rx="2"></rect>
               <text class="entity-name" x="16" y="27">enrollments</text>
               <text class="entity-meta" x="16" y="47">5 cols · unique user+course</text>
-              <text class="entity-meta" x="16" y="61">no mounted API</text>
+              <text class="entity-meta" x="16" y="61">2 mounted routes</text>
             </g>
             <g class="entity-node" data-entity="payments" tabindex="0" role="button" aria-label="Inspect payments table" transform="translate(20 470)">
               <rect class="entity-box" width="180" height="68" rx="10"></rect>
               <rect class="entity-bar" width="4" height="68" rx="2"></rect>
               <text class="entity-name" x="16" y="27">payments</text>
-              <text class="entity-meta" x="16" y="47">11 cols · manual transfer</text>
-              <text class="entity-meta" x="16" y="61">schema only</text>
+              <text class="entity-meta" x="16" y="47">9 cols · unique transaction</text>
+              <text class="entity-meta" x="16" y="61">3 mounted routes</text>
             </g>
             <g class="entity-node" data-entity="attempts" tabindex="0" role="button" aria-label="Inspect quiz attempts table" transform="translate(610 320)">
               <rect class="entity-box" width="190" height="68" rx="10"></rect>
@@ -1063,7 +1076,7 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
           </svg>
         </div>
         <div class="schema-stats">
-          <span><b>9</b> tables</span><span><b>10</b> foreign keys</span><span><b>4</b> enums</span><span><b>4</b> unique constraints</span><span><b>3</b> indexes</span>
+          <span><b>9</b> tables</span><span><b>10</b> foreign keys</span><span><b>4</b> enums</span><span><b>5</b> unique constraints</span><span><b>3</b> indexes</span>
         </div>
       </div>
       <aside class="panel inspector entity-inspector" aria-live="polite">
@@ -1166,7 +1179,7 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
         <div class="eyebrow">07 · External integrations</div>
         <h2>What is actually connected</h2>
       </div>
-      <p class="section-note">PostgreSQL and Redis are live dependencies. Payments and email exist in different states of incompleteness; there is no video provider, object storage, or queue.</p>
+      <p class="section-note">PostgreSQL and Redis are live dependencies. Payments are implemented as a manual review workflow without a provider SDK; email remains unwired, and there is no video provider, object storage, or queue.</p>
     </header>
     <div class="integration-grid reveal">
       <article class="integration-card">
@@ -1184,11 +1197,11 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
         <code class="env-line">REDIS_URL=redis://redis-eduvision:6379</code>
       </article>
       <article class="integration-card">
-        <div class="integration-head"><span class="integration-icon" style="--accent: var(--violet)">PAY</span><span class="tag tag-schema">Schema only</span></div>
+        <div class="integration-head"><span class="integration-icon" style="--accent: var(--violet)">PAY</span><span class="tag tag-live">Manual workflow</span></div>
         <h3>Payments</h3>
-        <p>The payment table records manual Vodafone Cash or InstaPay references against an enrollment. No checkout, webhook, or controller exists.</p>
-        <div class="integration-meta"><span>VCASH</span><span>INSTAPAY</span><span>pending / completed / failed</span></div>
-        <code class="env-line">No provider SDK in package.json</code>
+        <p>Students submit Vodafone Cash or InstaPay sender details against their own enrollment. The server derives the amount from the course price; admins list submissions and approve the payment plus enrollment in one transaction.</p>
+        <div class="integration-meta"><span>VCASH</span><span>INSTAPAY</span><span>PENDING → APPROVED / REJECTED</span></div>
+        <code class="env-line">No provider SDK · no webhook · no receipt upload</code>
       </article>
       <article class="integration-card">
         <div class="integration-head"><span class="integration-icon" style="--accent: var(--rose)">MAIL</span><span class="tag tag-planned">Not wired</span></div>
@@ -1223,17 +1236,23 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
       <p class="section-note">These are code-derived gaps, not requests for changes. Each card names the evidence and the practical effect.</p>
     </header>
     <div class="gap-grid reveal">
-      <article class="gap-card severity-high">
-        <div class="gap-severity">High</div>
-        <h3>Enrollment path is inert</h3>
-        <p><code>enrollments.router.ts</code> and its controller are empty; the router is never mounted. The service only echoes a message, so students can never actually enroll.</p>
-        <span class="evidence">src/modules/enrollments · server.ts</span>
+      <article class="gap-card severity-medium">
+        <div class="gap-severity">Medium</div>
+        <h3>Students cannot list their own records</h3>
+        <p>Students can create an enrollment and submit a payment, but both list routes are admin-only. There is no <code>/me</code> view for enrollments or payments.</p>
+        <span class="evidence">enrollments.router.ts · payment.router.ts</span>
       </article>
       <article class="gap-card severity-high">
         <div class="gap-severity">High</div>
         <h3>No content access control</h3>
         <p>Course, lesson, quiz, question, and option reads require only a valid cookie. There is no check that the student is enrolled in the course being read.</p>
         <span class="evidence">course/lesson/quiz routers · authenticate only</span>
+      </article>
+      <article class="gap-card severity-medium">
+        <div class="gap-severity">Medium</div>
+        <h3>Payment review is one-way</h3>
+        <p>Admins can approve a payment, which also approves its enrollment in the same transaction, but there is no reject route or admin-note update even though the schema defines <code>REJECTED</code>.</p>
+        <span class="evidence">payment.router.ts · PaymentService.approvePayment</span>
       </article>
       <article class="gap-card severity-medium">
         <div class="gap-severity">Medium</div>
@@ -1274,13 +1293,13 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
       <article class="gap-card severity-low">
         <div class="gap-severity">Low</div>
         <h3>No production operations layer</h3>
-        <p>No migrations history, health endpoint, structured logger, tests, CI, or graceful shutdown were found. The server calls <code>listen</code> and exports nothing for testing.</p>
+        <p>No health endpoint, structured logger, tests, CI, or graceful shutdown were found. Migrations now exist under <code>drizzle/</code>, but the Docker command still applies schema with <code>db:push</code>.</p>
         <span class="evidence">repository root · server.ts</span>
       </article>
     </div>
     <div class="verdict reveal">
       <div class="verdict-label">Bottom line</div>
-      <p>A coherent CRUD-and-quiz API with working authentication and a sensible modular shape, but not yet a complete course business: enrollment, payments, certificates, and video delivery are unfinished.</p>
+      <p>A coherent CRUD-and-quiz API with working authentication, mounted enrollment routes, and a manual payment review flow. Certificates, video delivery, and enrollment-gated content access remain unfinished.</p>
     </div>
   </section>
 </main>
@@ -1291,7 +1310,7 @@ dialog.module-dialog::backdrop{background:rgba(1,8,12,.72);backdrop-filter:blur(
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6l7-3z"/><path d="M9.5 10.5l1.8 1.8 3.4-3.4"/></svg></span>
       <span>EduVision<small>backend field guide</small></span>
     </div>
-    <p>Derived from repository source and README on 09 Nov 2026. Counts and behavior describe the code as found; no application files were modified.</p>
+    <p>Derived from repository source and README on 11 Nov 2026. Counts and behavior describe the code as found; no application files were modified.</p>
   </div>
   <div class="footer-links">
     <a href="#map">Map</a><a href="#routes">Routes</a><a href="#data">Schema</a><a href="#gaps">Gaps</a>
@@ -1397,12 +1416,13 @@ const layers = {
     files: "src/server.ts · src/config/RateLimiterconfig.ts"
   },
   routers: {
-    status: "Active", title: "Seven mounted routers · 39 routes",
+    status: "Active", title: "Nine mounted routers · 44 routes",
     desc: "Each domain router declares authentication and role guards per route before delegating to a controller.",
     points: [
       "Auth is the only router with public endpoints: register and login.",
       "Course, lesson, quiz, question, and option reads require any signed-in user.",
-      "Enrollments is not mounted; payments and certificates have no router."
+      "Enrollment creation and payment submission are student-only; enrollment/payment listing and payment approval are admin-only.",
+      "Certificates is the only domain with no router."
     ],
     files: "src/modules/*/*.router.ts"
   },
@@ -1417,11 +1437,12 @@ const layers = {
     files: "src/modules/*/*.controller.ts · src/middlewares/asyncHandler.ts"
   },
   services: {
-    status: "Active", title: "Eight service classes",
+    status: "Active", title: "Nine service classes",
     desc: "Business logic lives in classes that construct their own Drizzle client over the shared pg Pool.",
     points: [
       "AuthService hashes passwords, verifies login, and manages users.",
       "CourseService owns the Redis catalog cache branch.",
+      "PaymentService checks enrollment ownership, derives the amount from the course price, and approves payment + enrollment in one transaction.",
       "QuizAttemptsService grades options in SQL results and relies on a unique constraint."
     ],
     files: "src/modules/*/*.service.ts"
@@ -1432,7 +1453,7 @@ const layers = {
     points: [
       "Relational queries power the course → lesson → quiz → question → option tree.",
       "Schema definitions live in src/db/schema.",
-      "There is no migrations folder in the repository."
+      "A generated migration now lives in drizzle/ (0000_payments_transaction_number_unique)."
     ],
     files: "src/db/schema/*.ts · src/config/config.ts"
   },
@@ -1593,32 +1614,33 @@ const modules = {
     files: "src/modules/quiz_attempts/* · src/db/schema/quiz_attempts.ts"
   },
   enrollments: {
-    title: "Enrollments", service: "EnrollmentService", status: "partial", statusLabel: "Partial",
-    summary: "The table and a service skeleton exist, but the router and controller are empty and never mounted.",
-    routes: [],
+    title: "Enrollments", service: "EnrollmentService", status: "live", statusLabel: "Live",
+    summary: "Student enrollment creation with course and duplicate checks, plus an admin-only listing.",
+    routes: [["POST", "/api/enrollments/"], ["GET", "/api/enrollments/"]],
     points: [
-      "enrollments links one user to one course with a status enum.",
-      "unique(user_id, course_id) prevents duplicate links.",
-      "The service method only returns an echo of its input.",
-      "The router is not imported in server.ts.",
-      "No student can create or inspect an enrollment through the API."
+      "POST /api/enrollments/ validates that the course exists before inserting.",
+      "unique(user_id, course_id) prevents duplicate links; a duplicate returns 409.",
+      "New enrollments start at the schema default PENDING.",
+      "GET /api/enrollments/ lists every enrollment for admins.",
+      "There is no student /me listing and no enrollment-gated content access."
     ],
-    note: "This is the key missing link between auth, payments, and course access.",
+    note: "Enrollment and payment are separate steps; the enrollment becomes APPROVED when its payment is approved.",
     files: "src/modules/enrollments/* · src/db/schema/Enrollments.ts · src/server.ts"
   },
   payments: {
-    title: "Payments", service: "No service in src", status: "schema", statusLabel: "Schema only",
-    summary: "A payment table records manual Vodafone Cash or InstaPay submissions for an enrollment.",
-    routes: [],
+    title: "Payments", service: "PaymentService", status: "live", statusLabel: "Live",
+    summary: "Manual Vodafone Cash / InstaPay submissions tied to an enrollment, with admin approval.",
+    routes: [["POST", "/api/payments/"], ["GET", "/api/payments/"], ["PATCH", "/api/payments/:id/approve"]],
     points: [
-      "Payments reference enrollments and cascade on enrollment delete.",
-      "Amount is an integer in piasters; 50000 means 500 EGP.",
-      "Method is VCASH or INSTAPAY; status is PENDING, APPROVED, or REJECTED.",
-      "Sender name, phone, transaction number, and admin note are stored.",
-      "No controller, route, provider SDK, or webhook exists in current source."
+      "createPayment checks that the enrollment exists and belongs to the authenticated student.",
+      "The amount is read from courses.price and never taken from the request body.",
+      "Method is validated as VCASH or INSTAPAY; status defaults to PENDING.",
+      "transaction_number is unique; a duplicate returns 409.",
+      "approvePayment updates the payment and its enrollment to APPROVED in one transaction.",
+      "There is no reject route, receipt upload, provider SDK, or webhook."
     ],
-    note: "Stale payment code may exist under dist, but no current src module can accept or approve a payment.",
-    files: "src/db/schema/payment.ts · no src module · stale dist/"
+    note: "Only approval is exposed; the REJECTED status exists in the schema but no endpoint writes it.",
+    files: "src/modules/payments/* · src/db/schema/payment.ts · src/server.ts"
   },
   certificates: {
     title: "Certificates", service: "Not built", status: "planned", statusLabel: "Planned",
@@ -1628,7 +1650,7 @@ const modules = {
       "No certificate entity in the Drizzle schema.",
       "No completion tracking beyond quiz attempts.",
       "No PDF generation, verification id, or public certificate route.",
-      "No enrollment API from which completion could be derived."
+      "Enrollment status tracks approval only; there is no completion or progress data."
     ],
     note: "Treat certificates as a product intention, not an existing capability.",
     files: "README target only · no src implementation"
@@ -1740,7 +1762,7 @@ const entities = {
     kind: "Table · catalog root", desc: "A priced course owned by an admin. The root of the lesson, quiz, question, and option tree.",
     columns: [["id","uuid","PK"],["title","varchar(255)",""],["price","integer",""],["admin_id","uuid","FK"],["created_at","timestamp",""],["updated_at","timestamp",""]],
     relations: "<b>admin_id</b> → users.id · referenced by <b>lessons.course_id</b> and <b>enrollments.course_id</b>",
-    note: "Price is an integer; unlike payments, the unit is not documented in the schema."
+    note: "Price is a plain integer; no currency type or constraint is enforced."
   },
   lessons: {
     kind: "Table · catalog", desc: "Ordered content under a course. It stores duration but no playback asset.",
@@ -1767,16 +1789,16 @@ const entities = {
     note: "The flag is readable through ordinary API reads, so correctness is not a server-only secret."
   },
   enrollments: {
-    kind: "Table · access", desc: "Links a user to a course with a lifecycle status. The API layer around it is empty.",
+    kind: "Table · access", desc: "Links a user to a course with a lifecycle status. Students create enrollments; admins list them.",
     columns: [["id","uuid","PK"],["user_id","uuid","FK"],["course_id","uuid","FK"],["status","enrollment_status","ENUM"],["created_at","timestamp",""]],
     relations: "<b>user_id</b> → users.id (cascade) · <b>course_id</b> → courses.id (cascade) · one-to-many <b>payments</b>",
-    note: "unique(user_id, course_id) stops duplicates; index on course_id. Status defaults to PENDING (PENDING, APPROVED, SUSPENDED)."
+    note: "unique(user_id, course_id) stops duplicates; index on course_id. Status defaults to PENDING (PENDING, APPROVED, SUSPENDED) and becomes APPROVED when a payment is approved."
   },
   payments: {
     kind: "Table · money", desc: "A manual payment claim attached to an enrollment, awaiting admin review.",
-    columns: [["id","uuid","PK"],["enrollment_id","uuid","FK"],["amount","integer",""],["method","payment_method","ENUM"],["sender_name","varchar(150)",""],["sender_phone","varchar(30)",""],["transaction_number","varchar(100)",""],["status","payment_status","ENUM"],["admin_note","varchar(500)",""],["created_at","timestamp",""]],
-    relations: "<b>enrollment_id</b> → enrollments.id (cascade) · indexed by enrollment and status",
-    note: "Amount is in piasters (50000 = 500 EGP). Methods: VCASH, INSTAPAY. Statuses: PENDING, APPROVED, REJECTED."
+    columns: [["id","uuid","PK"],["enrollment_id","uuid","FK"],["amount","integer",""],["method","payment_method","ENUM"],["sender_name","varchar(150)",""],["sender_phone","varchar(30)",""],["transaction_number","varchar(100)","UQ"],["status","payment_status","ENUM"],["created_at","timestamp",""]],
+    relations: "<b>enrollment_id</b> → enrollments.id (cascade) · indexed by enrollment and status · unique transaction_number",
+    note: "Amount is derived from courses.price by PaymentService. Methods: VCASH, INSTAPAY. Statuses: PENDING, APPROVED, REJECTED. Reject/note are not exposed by the API yet."
   },
   attempts: {
     kind: "Table · assessment", desc: "One graded submission per user and quiz. Only the numeric score is retained.",
@@ -1971,7 +1993,7 @@ const stages = [
   },
   {
     n: "04", label: "Route match", title: "Router selection",
-    desc: "Express matches the /api prefix and picks one of the seven mounted routers, then a route within it.",
+    desc: "Express matches the /api prefix and picks one of the nine mounted routers, then a route within it.",
     code: "app.use(\"/api/courses\", courseRouter)",
     points: ["Unmatched requests fall through to a 404 AppError.", "Static segments are registered before /:id parameters."],
     files: "src/server.ts · src/modules/*/*.router.ts"
@@ -2001,7 +2023,7 @@ const stages = [
     n: "08", label: "Data access", title: "Drizzle query construction",
     desc: "Drizzle builds SQL from the typed schema and passes it to node-postgres over the shared connection pool.",
     code: "drizzle({ client: pool, schema })",
-    points: ["Relational queries use the relations declared in src/db/schema.", "No migrations are present in the repository."],
+    points: ["Relational queries use the relations declared in src/db/schema.", "A generated migration lives in drizzle/; db:push remains the Docker apply path."],
     files: "src/db/schema/*.ts · src/config/config.ts"
   },
   {
@@ -2015,7 +2037,7 @@ const stages = [
     n: "10", label: "Response", title: "JSON response or mapped error",
     desc: "The controller serializes the result. Rejections reach the central error handler, which maps known Postgres codes.",
     code: "res.status(200).json({ success: true, data })",
-    points: ["PG 23505 maps to 409 \"Email already exists\".", "PG 23503 maps to 409; 23502 and 22P02 map to 400.", "Unknown errors become a generic 500 and are logged."],
+    points: ["PG 23505 maps to 409 \"Email already exists\" unless the service handles it first.", "PaymentService maps a duplicate transaction number to its own 409 message.", "PG 23503 maps to 409; 23502 and 22P02 map to 400.", "Unknown errors become a generic 500 and are logged."],
     files: "src/middlewares/errorHandler.ts · src/errors/AppError.ts"
   }
 ];

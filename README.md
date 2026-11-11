@@ -1,8 +1,8 @@
 # EduVision 🎥🔒
 
-**EduVision** is a video-course platform focused on smart security systems training (IP cameras, video doorbells, alarm systems, NVR/DVR, etc.). Students browse courses, pay per-course via **Vodafone Cash** (receipt upload + admin approval), watch lessons, pass a quiz after each lesson to unlock the next one, and receive a certificate on completion.
+**EduVision** is a video-course platform focused on smart security systems training (IP cameras, video doorbells, alarm systems, NVR/DVR, etc.). The current backend lets students register and log in, browse courses/lessons/quizzes, enroll in a course, submit a manual **Vodafone Cash** or **InstaPay** payment for admin approval, and take quizzes.
 
-> This README documents the current codebase (Node.js/TypeScript API + PostgreSQL, containerized with Docker) and the target backend architecture, based on the project's `package.json`, `docker-compose.yml`, and the ERD below.
+> This README documents the implemented Node.js/TypeScript API and its PostgreSQL/Redis infrastructure. Certificate issuing, lesson locking, progress tracking, enrollment-gated content access, and video delivery are not implemented yet.
 
 ---
 
@@ -10,92 +10,82 @@
 
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
+- [Request pipeline](#request-pipeline)
 - [Database schema (ERD)](#database-schema-erd)
-- [Backend architecture](#backend-architecture)
+- [Enrollment and payment flow](#enrollment-and-payment-flow)
 - [Getting started (Docker)](#getting-started-docker)
 - [Environment variables](#environment-variables)
 - [NPM scripts](#npm-scripts)
-- [API surface (suggested)](#api-surface-suggested)
+- [API surface](#api-surface)
+- [Current limitations](#current-limitations)
 - [Roadmap](#roadmap)
 
 ---
 
 ## Tech stack
 
-| Layer          | Technology                          |
-|----------------|--------------------------------------|
-| Runtime        | Node.js (ESM, `type: module`)        |
-| Language       | TypeScript 5                         |
-| Web framework  | Express 5                            |
-| ORM            | Drizzle ORM + Drizzle Kit            |
-| Database       | PostgreSQL 17 (Alpine)               |
-| Auth           | JSON Web Tokens (`jsonwebtoken`)     |
-| Dev tooling    | `tsc-watch` (hot reload for `dev`)   |
-| Containerization | Docker + Docker Compose            |
+| Layer            | Technology                                              |
+|------------------|---------------------------------------------------------|
+| Runtime          | Node.js (ESM, `type: module`)                            |
+| Language         | TypeScript 5                                             |
+| Web framework    | Express 5                                                |
+| ORM              | Drizzle ORM + Drizzle Kit                                |
+| Database         | PostgreSQL 17 (Alpine)                                   |
+| Cache            | Redis 7 (course catalog)                                 |
+| Auth             | JWT (`jsonwebtoken`) in an HttpOnly cookie + `bcrypt`    |
+| Security         | `helmet`, `cors`, `express-rate-limit` (40 req/min/IP)   |
+| Dev tooling      | `tsc-watch` (hot reload for `dev`)                       |
+| Containerization | Docker + Docker Compose                                  |
 
 ---
 
 ## Project structure
 
-The `docker-compose.yml` mounts `./src` and `./dist`, and the `dev` script rebuilds on file change (`tsc-watch --onSuccess "node dist/server.js"`). A structure that matches the "one class per service" requirement:
-
 ```
 eduvision/
 ├── src/
-│   ├── server.ts                 # Express app bootstrap
+│   ├── server.ts                       # Express app bootstrap and router mounting
 │   ├── config/
-│   │   ├── env.ts                # env var loading/validation
-│   │   └── db.ts                 # Drizzle + pg pool setup
+│   │   ├── config.ts                   # shared pg Pool
+│   │   ├── env.ts                      # JWT_SECRET loading/validation
+│   │   ├── RateLimiterconfig.ts        # global API rate limiter
+│   │   └── redis.ts                    # Redis client
 │   ├── db/
-│   │   ├── schema/                # Drizzle table definitions (1 file per entity)
-│   │   │   ├── users.schema.ts
-│   │   │   ├── courses.schema.ts
-│   │   │   ├── lessons.schema.ts
-│   │   │   ├── quizzes.schema.ts
-│   │   │   ├── questions.schema.ts
-│   │   │   ├── options.schema.ts
-│   │   │   ├── quizAttempts.schema.ts
-│   │   │   ├── enrollments.schema.ts
-│   │   │   ├── payments.schema.ts
-│   │   │   └── certificates.schema.ts
-│   │   └── index.ts               # re-exports all schemas
-│   ├── modules/
-│   │   ├── auth/
-│   │   │   ├── auth.service.ts    # class AuthService
-│   │   │   ├── auth.controller.ts
-│   │   │   └── auth.routes.ts
-│   │   ├── users/
-│   │   │   ├── user.service.ts    # class UserService
-│   │   │   ├── user.controller.ts
-│   │   │   └── user.routes.ts
-│   │   ├── courses/
-│   │   │   ├── course.service.ts  # class CourseService
-│   │   │   ├── course.controller.ts
-│   │   │   └── course.routes.ts
-│   │   ├── lessons/
-│   │   │   ├── lesson.service.ts  # class LessonService
-│   │   │   └── lesson.routes.ts
-│   │   ├── quizzes/
-│   │   │   ├── quiz.service.ts    # class QuizService
-│   │   │   └── quiz.routes.ts
-│   │   ├── enrollments/
-│   │   │   ├── enrollment.service.ts  # class EnrollmentService
-│   │   │   └── enrollment.routes.ts
-│   │   ├── payments/
-│   │   │   ├── payment.service.ts # class PaymentService
-│   │   │   └── payment.routes.ts
-│   │   └── certificates/
-│   │       ├── certificate.service.ts # class CertificateService
-│   │       └── certificate.routes.ts
+│   │   ├── schema/
+│   │   │   ├── users.ts
+│   │   │   ├── courses.ts
+│   │   │   ├── lessons.ts
+│   │   │   ├── quizzes.ts
+│   │   │   ├── questions.ts
+│   │   │   ├── options.ts
+│   │   │   ├── quiz_attempts.ts
+│   │   │   ├── Enrollments.ts
+│   │   │   ├── payment.ts
+│   │   │   └── index.ts                # re-exports all schemas
+│   │   └── seed.ts                     # demo data seeding
+│   ├── errors/
+│   │   └── AppError.ts
 │   ├── middlewares/
-│   │   ├── auth.middleware.ts      # verify JWT, attach req.user
-│   │   ├── role.middleware.ts      # restrict by role (admin/instructor/student)
-│   │   └── error.middleware.ts     # centralized error handler
-│   └── common/
-│       ├── errors/                 # custom error classes (NotFoundError, etc.)
-│       └── types/
-├── drizzle/                        # generated migrations (drizzle-kit)
-├── dist/                           # compiled JS output (tsc)
+│   │   ├── auth.ts                     # authenticate + authorize("admin" | "student")
+│   │   ├── asyncHandler.ts
+│   │   └── errorHandler.ts             # centralized errors + PG code mapping
+│   ├── modules/
+│   │   ├── auth/                       # AuthService
+│   │   ├── course/                     # CourseService (+ Cash/cache.service.ts)
+│   │   ├── lesson/                     # LessonsService
+│   │   ├── quiz/                       # QuizzesService
+│   │   ├── question/                   # QuestionsService
+│   │   ├── option/                     # OptionsService
+│   │   ├── quiz_attempts/              # QuizAttemptsService
+│   │   ├── enrollments/                # EnrollmentService
+│   │   └── payments/                   # PaymentService
+│   │       └── (each module: service + controller + router)
+│   └── utils/
+│       ├── hashedPassword.ts
+│       └── token.ts                    # JWT sign/verify
+├── drizzle/                            # generated migration + metadata
+├── dist/                               # compiled JS output
+├── artifacts/                          # generated architecture field guide
 ├── Dockerfile
 ├── docker-compose.yml
 ├── drizzle.config.ts
@@ -103,112 +93,67 @@ eduvision/
 └── package.json
 ```
 
-Each domain (users, courses, lessons, quizzes, enrollments, payments, certificates) gets **its own service class**, plus its own controller and route file. Controllers stay thin (parse request → call service → format response); all business logic and DB access lives in the service class.
+Every domain uses the same shape: a router declares authentication/role guards, a thin controller parses the request, and a service class owns the business logic and Drizzle queries. Responses use `{ success: true, data }` or `{ success: true, msg }`; errors return `{ success: false, message }`.
+
+---
+
+## Request pipeline
+
+1. `express-rate-limit` applies a global limit of 40 requests per minute per IP.
+2. `helmet`, CORS (`origin: "*"`, credentials enabled), JSON parsing, and `cookie-parser` run.
+3. One of nine routers handles the request: auth, courses, lessons, quizzes, questions, options, quiz-attempts, enrollments, payments.
+4. `authenticate` reads the `token` cookie and attaches `{ id, role }` to the request; `authorize` restricts routes to `admin` or `student`.
+5. The controller calls the matching service class.
+6. Services query PostgreSQL through Drizzle over a shared `pg` Pool. `CourseService` uses Redis for the course catalog with a 10-minute TTL.
+7. Unknown routes produce a 404 `AppError`; `errorHandler` maps PostgreSQL error codes (`23505`, `23503`, etc.) and returns a consistent JSON error.
 
 ---
 
 ## Database schema (ERD)
 
-Derived from the provided diagram — 10 tables:
+Nine tables, four enums, ten foreign keys:
 
-```
-USERS                    COURSES                   LESSONS
-─────────────            ─────────────              ─────────────
-id (PK)                  id (PK)                    id (PK)
-name                      title, price               course_id (FK) ──▶ COURSES
-email                     instructor_id (FK) ──▶ USERS   title, duration_sec
-role
+| Table           | Key columns                                                                 | Relationships                                      |
+|-----------------|-----------------------------------------------------------------------------|----------------------------------------------------|
+| `users`         | `id` UUID PK, `name`, `email` unique, `password` hash, `role` enum, timestamps | one-to-many courses, enrollments, quiz attempts     |
+| `courses`       | `id` UUID PK, `title`, `price` integer, `admin_id` FK, timestamps           | `admin_id` → users.id; many lessons, enrollments    |
+| `lessons`       | `id` UUID PK, `course_id` FK, `title`, `duration_sec`                        | `course_id` → courses.id; one quiz                  |
+| `quizzes`       | `id` UUID PK, `lesson_id` FK unique, `title`                                 | `lesson_id` → lessons.id; many questions            |
+| `questions`     | `id` UUID PK, `quiz_id` FK, `question_text`                                  | `quiz_id` → quizzes.id; many options                |
+| `options`       | `id` UUID PK, `question_id` FK, `option_text`, `is_correct`                  | `question_id` → questions.id                        |
+| `quiz_attempts` | `id` UUID PK, `user_id` FK, `quiz_id` FK, `score`, `attempted_at`            | unique `(user_id, quiz_id)`; cascade on delete      |
+| `enrollments`   | `id` UUID PK, `user_id` FK, `course_id` FK, `status` enum, `created_at`      | unique `(user_id, course_id)`; many payments         |
+| `payments`      | `id` UUID PK, `enrollment_id` FK, `amount`, `method`, sender fields, `status`, `created_at` | `enrollment_id` → enrollments.id; unique `transaction_number` |
 
+Enums:
 
-QUIZZES                  QUESTIONS                  OPTIONS
-─────────────            ─────────────              ─────────────
-id (PK)                  id (PK)                    id (PK)
-lesson_id (FK) ──▶ LESSONS   quiz_id (FK) ──▶ QUIZZES    question_id (FK) ──▶ QUESTIONS
-title                     question_text              is_correct
+- `role`: `admin`, `student`
+- `enrollment_status`: `PENDING`, `APPROVED`, `SUSPENDED`
+- `payment_status`: `PENDING`, `APPROVED`, `REJECTED`
+- `payment_method`: `VCASH`, `INSTAPAY`
 
+Indexes and constraints: `enrollments_course_id_idx`, `payments_enrollment_id_idx`, `payments_status_idx`, unique `enrollments_user_course_unique`, unique `payments_transaction_number_unique`, unique `unique_user_quiz`.
 
-QUIZ_ATTEMPTS             ENROLLMENTS                PAYMENTS
-─────────────             ─────────────              ─────────────
-id (PK)                   id (PK)                    id (PK)
-user_id (FK) ──▶ USERS     user_id (FK) ──▶ USERS     user_id (FK) ──▶ USERS
-quiz_id (FK) ──▶ QUIZZES   course_id (FK) ──▶ COURSES course_id (FK) ──▶ COURSES
-score                      progress_pct               status
+**Relationships in words:**
 
+- An admin (a `users` row with `role = admin`) owns many courses through `courses.admin_id`.
+- A course has many lessons; a lesson has at most one quiz; a quiz has many questions; each question has many options.
+- A student enrolls in courses through `enrollments`; an enrollment can have multiple payment submissions.
+- A payment belongs to an enrollment, not directly to a user or course. Its amount is copied from the course price by `PaymentService`.
+- Quiz attempts are one per student per quiz and store the number of correct answers.
 
-CERTIFICATES
-─────────────
-id (PK)
-user_id (FK) ──▶ USERS
-course_id (FK) ──▶ COURSES
-issued_at
-```
-
-**Relationships:**
-- A `USER` (role = instructor) **teaches** many `COURSES`.
-- A `COURSE` **has many** `LESSONS`.
-- A `LESSON` **has one** `QUIZ`, which **has many** `QUESTIONS`, each with many `OPTIONS` (one `is_correct`).
-- A `USER` **attempts** many `QUIZZES` → recorded in `QUIZ_ATTEMPTS` (with `score`).
-- A `USER` **enrolls** in many `COURSES` → tracked in `ENROLLMENTS` (with `progress_pct`), and pays for them via `PAYMENTS` (with `status`: pending / approved / rejected, matching the admin approval flow in the UI).
-- On completing a course, a `CERTIFICATE` row is issued for that `user_id` + `course_id`.
+There is no `certificates` table in the current schema.
 
 ---
 
-## Backend architecture
+## Enrollment and payment flow
 
-**Layered, class-based service architecture**, one class per business domain:
+1. **Create enrollment** — `POST /api/enrollments` with `{ courseId }`. The student ID comes from the JWT. Missing course → 404; duplicate `(user, course)` → 409. New rows default to `PENDING`.
+2. **Submit payment** — `POST /api/payments` with `{ enrollmentId, method, senderName, senderPhone, transactionNumber }`. The service verifies the enrollment exists (404), belongs to the caller (403), validates the method and field lengths (400), rejects a reused transaction number (409), and stores `amount = enrollment.course.price`. Status defaults to `PENDING`.
+3. **Review payments** — `GET /api/payments` returns every submission for admins.
+4. **Approve payment** — `PATCH /api/payments/:id/approve` runs one transaction: the payment becomes `APPROVED` and its enrollment becomes `APPROVED`. A missing payment → 404; a non-pending payment → 409.
 
-- **Controller layer** — Express route handlers; validates input (e.g. with `zod`), calls the matching service, returns HTTP responses. No DB queries here.
-- **Service layer (one class per entity/domain)** — owns all business rules and Drizzle queries for that domain, e.g.:
-  - `AuthService` — register/login, password hashing, JWT issue/verify.
-  - `UserService` — CRUD, ban/unban, role management (admin panel).
-  - `CourseService` — CRUD, pricing, instructor assignment.
-  - `LessonService` — CRUD, ordering, lock/unlock logic per enrollment progress.
-  - `QuizService` — quiz + questions + options CRUD, grading logic (`QuizAttemptService` can be split out if it grows).
-  - `EnrollmentService` — enroll user, update `progress_pct` as lessons/quizzes are completed.
-  - `PaymentService` — create payment (receipt upload), admin approve/reject, ties into `EnrollmentService` on approval.
-  - `CertificateService` — issue certificate once `progress_pct = 100`.
-- **Data layer** — Drizzle ORM schema + `pg` pool, injected into services (constructor injection) so they're unit-testable.
-- **Middleware** — JWT auth guard, role-based access guard (admin / instructor / student), centralized error handler.
-
-Example service skeleton:
-
-```ts
-// src/modules/courses/course.service.ts
-import { db } from "../../config/db.js";
-import { courses } from "../../db/schema/courses.schema.js";
-import { eq } from "drizzle-orm";
-
-export class CourseService {
-  async findAll() {
-    return db.select().from(courses);
-  }
-
-  async findById(id: number) {
-    const [course] = await db.select().from(courses).where(eq(courses.id, id));
-    return course ?? null;
-  }
-
-  async create(data: { title: string; price: number; instructorId: number }) {
-    const [course] = await db.insert(courses).values(data).returning();
-    return course;
-  }
-}
-```
-
-Controllers then instantiate (or receive via DI) the service:
-
-```ts
-// src/modules/courses/course.controller.ts
-import { Request, Response } from "express";
-import { CourseService } from "./course.service.js";
-
-const courseService = new CourseService();
-
-export async function listCourses(_req: Request, res: Response) {
-  const data = await courseService.findAll();
-  res.json(data);
-}
-```
+Not implemented: reject route, admin note, receipt upload, provider SDK/webhook, duplicate-payment policy per enrollment, and student-facing `/me` listings.
 
 ---
 
@@ -219,78 +164,162 @@ docker compose up --build
 ```
 
 This will:
-1. Start the `db` service — PostgreSQL 17, exposed on host port **5433** (container port 5432).
-2. Build and start the `eduvision` API service, exposed on host port **4000**.
-3. Run `npm run db:push` (Drizzle Kit push) before starting the dev server, so the schema is synced against the database on every boot.
 
-The API will hot-reload on changes to `./src` thanks to the mounted volume + `tsc-watch`.
+1. Start `db-eduvision` — PostgreSQL 17 on host port **5433** (container 5432), with a healthcheck.
+2. Start `redis-eduvision` — Redis 7 on host port **6379**.
+3. Build and start `eduvision` on host port **4000**, running:
 
-> ⚠️ `npm run db:push` is referenced in `docker-compose.yml` but isn't currently defined in `package.json` — add it, e.g.: `"db:push": "drizzle-kit push"`.
+   ```sh
+   npm run db:push && npm run db:seed && npm run dev
+   ```
+
+4. Mount `./src` and `./dist` and rebuild on changes via `tsc-watch`.
+
+`db:push` uses `drizzle-kit push --force` against the schema. A generated migration also exists at `drizzle/0000_payments_transaction_number_unique.sql`; the container still applies schema with push on every boot.
+
+### Running outside Docker
+
+```powershell
+$env:DB_HOST="localhost"; $env:DB_PORT="5433"
+$env:REDIS_URL="redis://localhost:6379"
+npm install
+npm run build
+npm run db:push
+npm run db:seed
+npm run dev
+```
+
+`db:seed` runs `node dist/db/seed.js`, so build first. The seed reuses the demo users, course, enrollment, and `SEED-TXN-0001` payment across runs, but it appends a new demo lesson, quiz, 10 questions, and 40 options on every run. The seeded users have placeholder password hashes and cannot log in.
 
 ---
 
 ## Environment variables
 
-Not yet present in the compose file for the `eduvision` service — it currently only relies on the `db` service's Postgres credentials. You'll want to pass at least:
+Docker Compose reads `.env` through `env_file`. The application requires:
 
 ```env
-DATABASE_URL=postgres://eduvision:Ahmed@123@db:5432/eduvision
-JWT_SECRET=change-me
-JWT_EXPIRES_IN=7d
-PORT=4000
+JWT_SECRET=replace-with-at-least-32-characters
+DB_HOST=db-eduvision
+DB_PORT=5432
+DB_USER=eduvision
+DB_PASSWORD=replace-me
+DB_NAME=eduvision
+REDIS_URL=redis://redis-eduvision:6379
 ```
 
-Add an `environment:` block (or an `env_file: .env`) to the `eduvision` service in `docker-compose.yml`, and load it in `src/config/env.ts`.
+Notes:
+
+- `JWT_SECRET` is required at import time and must be at least 32 characters.
+- Database values fall back to the compose defaults when unset.
+- The server currently listens on port `4000` in code; `PORT` is not read.
+- When running on the host, use `DB_HOST=localhost`, `DB_PORT=5433`, and `REDIS_URL=redis://localhost:6379`.
 
 ---
 
 ## NPM scripts
 
-| Script  | Description                                              |
-|---------|-----------------------------------------------------------|
-| `dev`   | Watches TS with `tsc-watch`, restarts `dist/server.js` on success |
-| `build` | Compiles TypeScript (`tsc`) to `dist/`                     |
-| `start` | Runs the compiled server (`node dist/server.js`)           |
+| Script               | Description                                                        |
+|----------------------|--------------------------------------------------------------------|
+| `dev`                | Watches TS with `tsc-watch`, restarts `dist/server.js` on success  |
+| `build`              | Compiles TypeScript to `dist/`                                     |
+| `start`              | Runs the compiled server (`node dist/server.js`)                   |
+| `db:push`            | Pushes the Drizzle schema (`drizzle-kit push --force`)             |
+| `db:seed`            | Runs the compiled seed script (`node dist/db/seed.js`)             |
+| `docker:build`       | `docker-compose up --build -d`                                     |
+| `docker:dev`         | `docker-compose up -d`                                             |
+| `docker:down`        | `docker-compose down`                                              |
+| `docker:showdb`      | Opens `psql` in the `db-eduvision` container                       |
 
-Suggested additions:
-```json
-"db:push": "drizzle-kit push",
-"db:generate": "drizzle-kit generate",
-"db:studio": "drizzle-kit studio"
-```
+There are no test or lint scripts yet.
 
 ---
 
-## API surface (suggested)
+## API surface
 
-| Method | Route                                | Service            |
-|--------|----------------------------------------|--------------------|
-| POST   | `/api/auth/register`                   | AuthService         |
-| POST   | `/api/auth/login`                      | AuthService         |
-| GET    | `/api/courses`                         | CourseService       |
-| GET    | `/api/courses/:id`                     | CourseService       |
-| POST   | `/api/courses` *(instructor/admin)*    | CourseService       |
-| GET    | `/api/courses/:id/lessons`             | LessonService       |
-| GET    | `/api/lessons/:id/quiz`                | QuizService         |
-| POST   | `/api/lessons/:id/quiz/attempt`        | QuizService         |
-| POST   | `/api/enrollments`                     | EnrollmentService   |
-| GET    | `/api/enrollments/me`                  | EnrollmentService   |
-| POST   | `/api/payments` *(receipt upload)*     | PaymentService      |
-| PATCH  | `/api/payments/:id/approve` *(admin)*  | PaymentService      |
-| PATCH  | `/api/payments/:id/reject` *(admin)*   | PaymentService      |
-| GET    | `/api/certificates/me`                 | CertificateService  |
-| GET    | `/api/admin/users`                     | UserService         |
-| PATCH  | `/api/admin/users/:id/ban`             | UserService         |
+44 mounted routes. All non-auth routes require the `token` cookie; the access column shows the additional role guard.
+
+| Domain        | Method | Route                             | Access  |
+|---------------|--------|-----------------------------------|---------|
+| Auth          | POST   | `/api/auth/register`              | Public  |
+| Auth          | POST   | `/api/auth/login`                 | Public  |
+| Auth          | POST   | `/api/auth/logout`                | Any     |
+| Auth          | GET    | `/api/auth`                       | Admin   |
+| Auth          | PATCH  | `/api/auth/:id`                   | Student |
+| Auth          | DELETE | `/api/auth/:id`                   | Admin   |
+| Courses       | POST   | `/api/courses`                    | Admin   |
+| Courses       | GET    | `/api/courses`                    | Any     |
+| Courses       | GET    | `/api/courses/:id`                | Any     |
+| Courses       | PATCH  | `/api/courses/:id`                | Admin   |
+| Courses       | DELETE | `/api/courses/:id`                | Admin   |
+| Lessons       | POST   | `/api/lessons`                    | Admin   |
+| Lessons       | GET    | `/api/lessons`                    | Any     |
+| Lessons       | GET    | `/api/lessons/course/:course_id`  | Any     |
+| Lessons       | GET    | `/api/lessons/:id`                | Any     |
+| Lessons       | PATCH  | `/api/lessons/:id`                | Admin   |
+| Lessons       | DELETE | `/api/lessons/:id`                | Admin   |
+| Quizzes       | POST   | `/api/quizzes`                    | Admin   |
+| Quizzes       | GET    | `/api/quizzes`                    | Any     |
+| Quizzes       | GET    | `/api/quizzes/lesson/:lesson_id`  | Any     |
+| Quizzes       | GET    | `/api/quizzes/:id`                | Any     |
+| Quizzes       | PATCH  | `/api/quizzes/:id`                | Admin   |
+| Quizzes       | DELETE | `/api/quizzes/:id`                | Admin   |
+| Questions     | POST   | `/api/questions`                  | Admin   |
+| Questions     | GET    | `/api/questions`                  | Any     |
+| Questions     | GET    | `/api/questions/quiz/:quiz_id`    | Any     |
+| Questions     | GET    | `/api/questions/:id`              | Any     |
+| Questions     | PATCH  | `/api/questions/:id`              | Admin   |
+| Questions     | DELETE | `/api/questions/:id`              | Admin   |
+| Options       | POST   | `/api/options`                    | Admin   |
+| Options       | GET    | `/api/options`                    | Any     |
+| Options       | POST   | `/api/options/check-answer`       | Any     |
+| Options       | GET    | `/api/options/question/:question_id` | Any  |
+| Options       | GET    | `/api/options/:id`                | Any     |
+| Options       | PATCH  | `/api/options/:id`                | Admin   |
+| Options       | DELETE | `/api/options/:id`                | Admin   |
+| Quiz attempts | POST   | `/api/quiz-attempts`              | Student |
+| Quiz attempts | GET    | `/api/quiz-attempts/me`           | Student |
+| Quiz attempts | GET    | `/api/quiz-attempts/quiz/:quiz_id` | Admin  |
+| Enrollments   | POST   | `/api/enrollments`                | Student |
+| Enrollments   | GET    | `/api/enrollments`                | Admin   |
+| Payments      | POST   | `/api/payments`                   | Student |
+| Payments      | GET    | `/api/payments`                   | Admin   |
+| Payments      | PATCH  | `/api/payments/:id/approve`       | Admin   |
+
+A visual route-by-route map is available in `artifacts/eduvision-architecture.html`.
+
+---
+
+## Current limitations
+
+- Content reads (courses, lessons, quizzes, questions, options) require login but **do not check enrollment**, so any signed-in user can discover any content.
+- Lesson locking and progress tracking are not implemented; `enrollments` has no progress column.
+- Certificates are not implemented.
+- Payments support approval only: there is no reject endpoint, admin note, receipt upload, or provider integration. `REJECTED` exists in the enum but no code writes it.
+- Students cannot list their own enrollments or payments.
+- `PATCH /api/auth/:id` is guarded by `authorize("student")` and does not check that `:id` matches the caller.
+- The course catalog cache has a 10-minute TTL and mutations do not invalidate it.
+- Input validation is manual; `zod` is not used.
+- No tests, structured logging, health endpoint, CI, or graceful shutdown.
+- Deployments use `db:push --force`; the generated `drizzle/` migration is not the primary apply path.
+- The seed appends lesson/quiz/question/option data on every run.
 
 ---
 
 ## Roadmap
 
-- [ ] Add `db:push` script and `.env` support for the API container.
-- [ ] Implement Drizzle schema files matching the ERD above.
-- [ ] Implement `AuthService` (bcrypt hashing + JWT).
-- [ ] Implement lesson-locking logic (a lesson unlocks once the previous lesson's quiz is passed).
-- [ ] Payment approval flow: admin approves receipt → auto-create `ENROLLMENT`.
-- [ ] Certificate auto-issue when `progress_pct` hits 100%.
-- [ ] Add request validation (e.g. `zod`) and centralized error handling middleware.
-- [ ] Add tests per service class.
+- [x] Drizzle schema for users, courses, lessons, quizzes, questions, options, quiz attempts, enrollments, payments.
+- [x] JWT cookie authentication, password hashing, and admin/student role guards.
+- [x] CRUD routes for course content domains.
+- [x] Server-side quiz grading and attempt history.
+- [x] Enrollment creation with course/duplicate checks and admin listing.
+- [x] Manual payment submission with ownership checks, server-derived price, and unique transaction numbers.
+- [x] Admin payment approval that approves the enrollment in one transaction.
+- [x] Centralized error handling, rate limiting, Redis course cache, Docker setup, and seed script.
+- [ ] Reject payment / admin note / receipt upload.
+- [ ] Student `/me` listings for enrollments and payments.
+- [ ] Enrollment-gated content access, lesson locking, and progress tracking.
+- [ ] Certificate issuing when a course is completed.
+- [ ] Request validation (`zod`) and automated tests.
+- [ ] Structured logging, health endpoint, and graceful shutdown.
+- [ ] Migration-first deployment instead of `db:push --force`.
+- [ ] Idempotent seed for lesson/quiz demo data.
