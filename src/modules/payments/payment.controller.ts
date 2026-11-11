@@ -29,3 +29,12 @@ export const getAllPayments = asyncHandler(async (_req: Request, res) => {
   const payments = await paymentService.getAllPayments();
   res.status(200).json({ success: true, data: payments });
 });
+
+//! @desc    Approve a payment and its enrollment
+//! @route   PATCH /api/payments/:id/approve
+//! @access  Private (admin)
+export const approvePayment = asyncHandler(async (req: Request, res) => {
+  const id = req.params.id as string;
+  const payment = await paymentService.approvePayment(id);
+  res.status(200).json({ success: true, data: payment });
+});

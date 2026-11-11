@@ -32,6 +32,7 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 export class PaymentService {
+  //!! Create a payment
   async createPayment(data: CreatePaymentData) {
     const { userId, enrollmentId, method } = data;
     const senderName = data.senderName?.trim();
@@ -111,6 +112,37 @@ export class PaymentService {
     }
   }
 
+  async approvePayment(id: string) {
+    const payment = await db.query.payments.findFirst({
+      where: eq(schema.payments.id, id),
+    });
+
+    if (!payment) {
+      throw new AppError("Payment not found", 404);
+    }
+
+    if (payment.status !== "PENDING") {
+      throw new AppError("Payment has already been reviewed", 409);
+    }
+
+    //!! Use a transaction to ensure both updates succeed or fail together
+    return db.transaction(async (tx) => {
+      const result = await tx
+        .update(schema.payments)
+        .set({ status: "APPROVED" })
+        .where(eq(schema.payments.id, id))
+        .returning();
+
+      await tx
+        .update(schema.enrollments)
+        .set({ status: "APPROVED" })
+        .where(eq(schema.enrollments.id, payment.enrollmentId));
+
+      return result[0];
+    });
+  }
+
+  //!! Get all payments
   async getAllPayments() {
     return db.select().from(schema.payments);
   }
