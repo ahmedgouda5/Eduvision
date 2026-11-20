@@ -46,4 +46,29 @@ export class EnrollmentService {
     const result = await db.select().from(schema.enrollments);
     return result;
   }
+
+  async getMyEnrollments(userId: string) {
+    const result = await db.query.enrollments.findMany({
+      where: eq(schema.enrollments.userId, userId),
+    });
+    return result;
+  }
+
+  async hasCourseAccess(userId: string, courseId: string): Promise<boolean> {
+    const result = await db.query.enrollments.findFirst({
+      where: and(
+        eq(schema.enrollments.userId, userId),
+        eq(schema.enrollments.courseId, courseId),
+        eq(schema.enrollments.status, "APPROVED"),
+      ),
+    });
+    return !!result;
+  }
+
+  async getCourseEnrollments(courseId: string) {
+    const result = await db.query.enrollments.findMany({
+      where: eq(schema.enrollments.courseId, courseId),
+    });
+    return result;
+  }
 }

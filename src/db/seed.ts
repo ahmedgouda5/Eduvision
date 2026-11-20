@@ -1,3 +1,4 @@
+import { inArray } from "drizzle-orm";
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../db/schema/index.js";
@@ -278,6 +279,128 @@ async function seed() {
   }
 
   console.log(`\n✅ Seeded 10 questions with 4 options each.`);
+
+  // ─── 9. Bulk: 10 students, 10 courses, enrollments + payments ─────────────
+  const bulkStudentsData = Array.from({ length: 10 }, (_, i) => ({
+    name: `Seed Student ${i + 1}`,
+    email: `student${i + 1}@eduvision.dev`,
+    password: "hashed_placeholder", // not a real login — just for FK
+    role: "student" as const,
+  }));
+
+  await db.insert(schema.users).values(bulkStudentsData).onConflictDoNothing();
+
+  const bulkStudents = (
+    await db
+      .select()
+      .from(schema.users)
+      .where(
+        inArray(
+          schema.users.email,
+          bulkStudentsData.map((s) => s.email),
+        ),
+      )
+  ).sort((a, b) => a.email.localeCompare(b.email));
+
+  console.log(`\n👥 Bulk students ready: ${bulkStudents.length}`);
+
+  const bulkCoursesData = [
+    { title: "Advanced TypeScript Patterns", price: 249 },
+    { title: "Node.js Fundamentals", price: 179 },
+    { title: "REST APIs with Express", price: 199 },
+    { title: "PostgreSQL for Developers", price: 220 },
+    { title: "React with TypeScript", price: 299 },
+    { title: "Drizzle ORM in Practice", price: 189 },
+    { title: "Authentication & Authorization", price: 159 },
+    { title: "Git & GitHub Essentials", price: 99 },
+    { title: "Docker for Node Developers", price: 269 },
+    { title: "Testing Node Applications", price: 210 },
+  ];
+
+  const existingCourses = await db
+    .select()
+    .from(schema.courses)
+    .where(
+      inArray(
+        schema.courses.title,
+        bulkCoursesData.map((c) => c.title),
+      ),
+    );
+
+  const existingTitles = new Set(existingCourses.map((c) => c.title));
+  const missingCourses = bulkCoursesData
+    .filter((c) => !existingTitles.has(c.title))
+    .map((c) => ({ ...c, admin_id: adminUser.id }));
+
+  const insertedCourses = missingCourses.length
+    ? await db.insert(schema.courses).values(missingCourses).returning()
+    : [];
+
+  const bulkCourses = [...existingCourses, ...insertedCourses].sort((a, b) =>
+    a.title.localeCompare(b.title),
+  );
+
+  console.log(`📚 Bulk courses ready: ${bulkCourses.length}`);
+
+  // Even index → APPROVED, odd index → PENDING
+  let approvedCount = 0;
+  let pendingCount = 0;
+
+  for (let i = 0; i < bulkCourses.length; i++) {
+    const course = bulkCourses[i];
+    const student = bulkStudents[i % bulkStudents.length];
+    if (!student) continue;
+
+    const status = i % 2 === 0 ? ("APPROVED" as const) : ("PENDING" as const);
+    const method = i % 2 === 0 ? ("VCASH" as const) : ("INSTAPAY" as const);
+
+    // Enrollment (unique per user + course)
+    let enrollment = await db.query.enrollments.findFirst({
+      where: (e, { and, eq }) =>
+        and(eq(e.userId, student.id), eq(e.courseId, course.id)),
+    });
+
+    if (!enrollment) {
+      [enrollment] = await db
+        .insert(schema.enrollments)
+        .values({ userId: student.id, courseId: course.id, status })
+        .returning();
+    }
+
+    // Payment (unique transaction number)
+    const transactionNumber = `SEED-TXN-BULK-${String(i + 1).padStart(4, "0")}`;
+
+    let payment = await db.query.payments.findFirst({
+      where: (p, { eq }) => eq(p.transactionNumber, transactionNumber),
+    });
+
+    if (!payment) {
+      [payment] = await db
+        .insert(schema.payments)
+        .values({
+          enrollmentId: enrollment.id,
+          amount: course.price,
+          method,
+          senderName: student.name,
+          senderPhone: `010${String(i + 1).padStart(8, "0")}`,
+          transactionNumber,
+          status,
+        })
+        .returning();
+    }
+
+    if (status === "APPROVED") approvedCount++;
+    else pendingCount++;
+
+    console.log(
+      `  🎓 "${course.title}" ← ${student.email} | enrollment: ${enrollment.status} | payment: ${payment.status} (${transactionNumber})`,
+    );
+  }
+
+  console.log(
+    `\n✅ Seeded ${bulkCourses.length} courses, ${bulkStudents.length} students, ${approvedCount} approved + ${pendingCount} pending enrollments/payments.`,
+  );
+
   console.log(`\n📋 Summary:`);
   console.log(`   Quiz ID      : ${quiz.id}`);
   console.log(`   Lesson ID    : ${lesson.id}`);
